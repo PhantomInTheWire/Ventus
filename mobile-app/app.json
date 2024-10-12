@@ -1,11 +1,11 @@
 {
     "expo": {
-        "name": "ventus-mobile",
-        "slug": "ventus-mobile",
+        "name": "ventus",
+        "slug": "ventus",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
-        "scheme": "ventus.mobile",
+        "scheme": "io.ventus.mobile",
         "userInterfaceStyle": "automatic",
         "splash": {
             "image": "./assets/images/splash.png",

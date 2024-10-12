@@ -1,9 +1,14 @@
-import { Image, StyleSheet, Platform } from "react-native";
+import { Image, StyleSheet, Platform, Text, View } from "react-native";
+// import { styled } from "nativewind";
 
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+
+// const styledText = styled(Text);
+
+// import "../index.css";
 
 export default function HomeScreen() {
     return (
@@ -17,7 +22,13 @@ export default function HomeScreen() {
             }
         >
             <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Welcome!</ThemedText>
+                {/* <ThemedText type="title">Welcome!</ThemedText> */}
+                <Text className="text-4xl font-bold color-red-600">
+                    Hellllllo!
+                </Text>
+                {/* <View className="flex-1 items-center justify-center bg-white">
+                    <Text>Hello</Text>
+                </View> */}
                 <HelloWave />
             </ThemedView>
             <ThemedView style={styles.stepContainer}>
