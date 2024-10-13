@@ -96,11 +96,7 @@ impl Command {
             b"type" => Command::Type,
             b"list" => Command::List,
             b"pasv" => Command::Pasv,
-            _ => Command::Unknown(
-                str::from_utf8(&command)
-                    .unwrap_or("??")
-                    .to_owned(),
-            ),
+            _ => Command::Unknown(str::from_utf8(&command).unwrap_or("??").to_owned()),
         };
 
         Ok(command)
@@ -246,11 +242,21 @@ impl Client {
                 if let Some(mut writer) = self.data_writer.take() {
                     // Implement your logic to write the directory listing to the writer
                     // For simplicity, we'll just send a sample listing
-                    writeln!(writer, "drwxr-xr-x  1 owner group  4096 Jan 1 00:00 dir1")
-                        .unwrap();
-                    writeln!(writer, "-rw-r--r--  1 owner group 1024 Jan 1 00:00 file1.txt")
-                        .unwrap();
-                    send_cmd(&mut self.stream, ResultCode::ClosingDataConnection, "Closing data connection.");
+                    writeln!(
+                        writer,
+                        "drwxr-xr-x  1 owner group  4096 Jan 1 00:00 dir1"
+                    )
+                    .unwrap();
+                    writeln!(
+                        writer,
+                        "-rw-r--r--  1 owner group 1024 Jan 1 00:00 file1.txt"
+                    )
+                    .unwrap();
+                    send_cmd(
+                        &mut self.stream,
+                        ResultCode::ClosingDataConnection,
+                        "Closing data connection.",
+                    );
                 } else {
                     send_cmd(
                         &mut self.stream,
@@ -281,7 +287,11 @@ impl Client {
                     match listener.incoming().next() {
                         Some(Ok(client)) => {
                             self.data_writer = Some(client);
-                            send_cmd(&mut self.stream, ResultCode::DataConnectionOpen, "Data connection opened.");
+                            send_cmd(
+                                &mut self.stream,
+                                ResultCode::DataConnectionOpen,
+                                "Data connection opened.",
+                            );
                         }
                         _ => {
                             send_cmd(
