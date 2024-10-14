@@ -21,6 +21,7 @@ export default function HomeScreen() {
     return (
         // <SafeAreaView className="h-screen pt-10 bg-green-700">
         <Connect />
+        // <Test />
         // </SafeAreaView>
 
         // <ParallaxScrollView
