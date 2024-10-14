@@ -46,6 +46,8 @@ enum ResultCode {
     CommandNotImplementedForThatParameter = 504,
     NotLoggedIn = 530,
     NeedAccountForStoringFiles = 532,
+    FileTypeUnknown = 550,
+    PageTypeUnknown = 551,
     FileNameNotAllowed = 553,
 }
 
@@ -250,10 +252,34 @@ impl Client {
             },
             Command::Type => send_cmd(&mut self.stream, ResultCode::Ok, "Switching to Binary mode."),
             Command::List(_) => self.list(),
-            Command::Pasv => send_cmd(&mut self.stream, ResultCode::CommandNotImplemented, "Not implemented"),
+            Command::Pasv => { // Re-implementing PASV
+                if self.data_writer.is_some() {
+                    send_cmd(&mut self.stream, ResultCode::DataConnectionAlreadyOpen, "Already listening...");
+                } else {
+                    let port = 43210;
+
+                    // Calculate p1 and p2 for the PASV response (address is hardcoded as 127,0,0,1)
+                    let p1 = port / 256;
+                    let p2 = port % 256;
+                    send_cmd(&mut self.stream, ResultCode::EnteringPassiveMode, &format!("127,0,0,1,{},{}", p1, p2));
+
+                    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
+                    let listener = TcpListener::bind(&addr).unwrap();
+
+                    match listener.incoming().next() {
+                        Some(Ok(client)) => {
+                            self.data_writer = Some(client);
+                        },
+                        _ => {
+                            send_cmd(&mut self.stream, ResultCode::CantOpenDataConnection, "Failed to open data connection.");
+                        }
+                    }
+                }
+            },
             Command::Cwd(directory) => self.cwd(directory),
             Command::Cdup => {
-                let parent = PathBuf::from("..");
+                // Using canonical parent path for better compatibility
+                let parent = self.cwd.parent().map(|p| p.to_path_buf()).unwrap_or(self.cwd.clone());
                 self.cwd(parent);
             }
             Command::Mkdir(directory) => {
@@ -261,12 +287,12 @@ impl Client {
                 let path = self.cwd.join(&directory);
                 if let Ok(dir) = self.complete_path(path, &server_root) {
                     if let Err(_) = create_dir(&dir) {
-                        send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "Couldn't create directory");
+                        send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Couldn't create directory");
                     } else {
-                        send_cmd(&mut self.stream, ResultCode::RequestedFileActionOkay, "Directory created");
+                        send_cmd(&mut self.stream, ResultCode::PATHNAMECreated, "Directory created");
                     }
                 } else {
-                    send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "Permission denied");
+                    send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Permission denied");
                 }
             }
             Command::Rmd(directory) => {
@@ -274,12 +300,12 @@ impl Client {
                 let path = self.cwd.join(&directory);
                 if let Ok(dir) = self.complete_path(path, &server_root) {
                     if let Err(_) = remove_dir_all(&dir) {
-                        send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "Couldn't remove directory");
+                        send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Couldn't remove directory");
                     } else {
                         send_cmd(&mut self.stream, ResultCode::RequestedFileActionOkay, "Directory removed");
                     }
                 } else {
-                    send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "Permission denied");
+                    send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Permission denied");
                 }
             }
             Command::Unknown(command) => {
@@ -322,4 +348,3 @@ impl Client {
         }
     }
 }
-
