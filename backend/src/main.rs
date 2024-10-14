@@ -1,8 +1,11 @@
-use std::io::{Read, Write};
+use std::env;
+use std::fs::{create_dir, read_dir, remove_dir_all, Metadata};
+use std::io::{Read, Write, ErrorKind};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, TcpStream};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str;
 use std::thread;
+use time;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u32)]
@@ -45,9 +48,7 @@ enum ResultCode {
     NeedAccountForStoringFiles = 532,
     FileTypeUnknown = 550,
     PageTypeUnknown = 551,
-    ExceededStorageAllocation = 552,
     FileNameNotAllowed = 553,
-    FileNotFound = 554, // Add FileNotFound to ResultCode
 }
 
 #[derive(Clone, Debug)]
@@ -57,8 +58,12 @@ enum Command {
     User(String),
     Pwd,
     Type,
-    List,
+    List(Option<PathBuf>),
     Pasv,
+    Cwd(PathBuf),
+    Cdup,
+    Mkdir(PathBuf),
+    Rmd(PathBuf),
     Unknown(String),
 }
 
@@ -70,8 +75,12 @@ impl AsRef<str> for Command {
             Command::User(_) => "USER",
             Command::Pwd => "PWD",
             Command::Type => "TYPE",
-            Command::List => "LIST",
+            Command::List(_) => "LIST",
             Command::Pasv => "PASV",
+            Command::Cwd(_) => "CWD",
+            Command::Cdup => "CDUP",
+            Command::Mkdir(_) => "MKD",
+            Command::Rmd(_) => "RMD",
             Command::Unknown(_) => "UNKN",
         }
     }
@@ -80,23 +89,23 @@ impl AsRef<str> for Command {
 impl Command {
     pub fn new(input: Vec<u8>) -> std::io::Result<Self> {
         let mut iter = input.split(|&byte| byte == b' ');
-        let mut command = iter.next().expect("command in input").to_vec();
+        let command = iter.next().expect("command in input").to_vec();
+        let command_lowercase: Vec<u8> = command.to_ascii_lowercase();
+        let data = iter.next();
 
-        command.make_ascii_lowercase();
-        let data = iter.next().map(|d| d.to_vec()); // Convert slice to Vec<u8>
-
-        let command = match command.as_slice() {
+        let command = match command_lowercase.as_slice() {
             b"auth" => Command::Auth,
             b"syst" => Command::Syst,
-            b"user" => Command::User(
-                data.map(|bytes| String::from_utf8(bytes).unwrap())
-                    .unwrap_or_else(|| "Cannot convert bytes to String".to_owned()),
-            ),
+            b"user" => Command::User(data.map(|bytes| String::from_utf8_lossy(bytes).to_string()).unwrap_or_default()),
             b"pwd" => Command::Pwd,
             b"type" => Command::Type,
-            b"list" => Command::List,
+            b"list" => Command::List(data.map(|bytes| PathBuf::from(String::from_utf8_lossy(bytes).to_string()))),
             b"pasv" => Command::Pasv,
-            _ => Command::Unknown(str::from_utf8(&command).unwrap_or("??").to_owned()),
+            b"cwd" => Command::Cwd(data.map(|bytes| PathBuf::from(String::from_utf8_lossy(bytes).to_string())).unwrap_or_default()),
+            b"cdup" => Command::Cdup,
+            b"mkd" => Command::Mkdir(data.map(|bytes| PathBuf::from(String::from_utf8_lossy(bytes).to_string())).unwrap_or_default()),
+            b"rmd" => Command::Rmd(data.map(|bytes| PathBuf::from(String::from_utf8_lossy(bytes).to_string())).unwrap_or_default()),
+            _ => Command::Unknown(String::from_utf8_lossy(&command).to_string()),
         };
 
         Ok(command)
@@ -116,26 +125,19 @@ fn main() {
 
     println!("[*] Waiting for clients to connect...");
     for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                thread::spawn(move || {
-                    handle_client(stream);
-                });
-            }
-            _ => {
-                println!("[*] A client tried to connect...");
-            }
+        if let Ok(stream) = stream {
+            thread::spawn(move || {
+                handle_client(stream);
+            });
+        } else {
+            println!("[*] A client tried to connect...");
         }
     }
 }
 
 fn handle_client(mut stream: TcpStream) {
     println!("[+] New client connected!");
-    send_cmd(
-        &mut stream,
-        ResultCode::ServiceReadyForNewUser,
-        "Welcome to this FTP server!",
-    );
+    send_cmd(&mut stream, ResultCode::ServiceReadyForNewUser, "Welcome to this FTP server!");
 
     let mut client = Client::new(stream);
     loop {
@@ -168,7 +170,7 @@ fn read_all_message(stream: &mut TcpStream) -> Vec<u8> {
         match stream.read(&mut buf) {
             Ok(received) if received > 0 => {
                 if out.is_empty() && buf[0] == b' ' {
-                    continue;
+                    continue
                 }
 
                 out.push(buf[0]);
@@ -196,90 +198,70 @@ impl Client {
         }
     }
 
+    fn complete_path(&self, path: PathBuf, server_root: &PathBuf) -> Result<PathBuf, std::io::Error> {
+        let directory = server_root.join(if path.has_root() {
+            path.iter().skip(1).collect()
+        } else {
+            path
+        });
+
+        if let Ok(ref dir) = directory.canonicalize() {
+            let dir = dir.to_str().unwrap();
+            if !dir.starts_with(server_root.to_str().unwrap()) {
+                return Err(std::io::Error::new(ErrorKind::PermissionDenied, "Permission denied"));
+            }
+        }
+
+        Ok(directory)
+    }
+
+    fn cwd(&mut self, directory: PathBuf) {
+        let server_root = env::current_dir().unwrap();
+        let path = self.cwd.join(&directory);
+        if let Ok(dir) = self.complete_path(path, &server_root) {
+            if let Ok(prefix) = dir.strip_prefix(&server_root).map(|p| p.to_path_buf()) {
+                self.cwd = prefix;
+                send_cmd(&mut self.stream, ResultCode::Ok, &format!("Directory changed to \"{}\"", directory.display()));
+                return;
+            }
+        }
+
+        send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "No such file or directory");
+    }
+
     fn handle_cmd(&mut self, cmd: Command) {
         println!("{:?}", cmd);
         match cmd {
-            Command::Auth => send_cmd(
-                &mut self.stream,
-                ResultCode::CommandNotImplemented,
-                "Not implemented",
-            ),
-            Command::Syst => send_cmd(&mut self.stream, ResultCode::Ok, "I won't tell!"),
+            Command::Auth => send_cmd(&mut self.stream, ResultCode::CommandNotImplemented, "Not implemented"),
+            Command::Syst => send_cmd(&mut self.stream, ResultCode::Ok, "UNIX Type: L8"),
             Command::User(username) => {
                 if username.is_empty() {
-                    send_cmd(
-                        &mut self.stream,
-                        ResultCode::InvalidParameterOrArgument,
-                        "Invalid username",
-                    );
+                    send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "Invalid username");
                 } else {
                     self.name = Some(username);
-                    send_cmd(
-                        &mut self.stream,
-                        ResultCode::UserLoggedIn,
-                        &format!("Welcome {}", self.name.as_ref().unwrap()),
-                    );
+                    send_cmd(&mut self.stream, ResultCode::UserLoggedIn, &format!("Welcome {}", self.name.as_ref().unwrap()));
                 }
-            }
+            },
             Command::Pwd => {
-                let msg = format!("{}", self.cwd.to_str().unwrap_or(""));
+                let msg = format!("\"{}\"", self.cwd.to_str().unwrap_or(""));
                 if !msg.is_empty() {
-                    send_cmd(&mut self.stream, ResultCode::PATHNAMECreated, &msg);
+                    send_cmd(&mut self.stream, ResultCode::PATHNAMECreated, &format!("{}", msg));
                 } else {
-                    send_cmd(
-                        &mut self.stream,
-                        ResultCode::FileNotFound,
-                        "No such file or directory",
-                    );
+                    send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "No such file or directory");
                 }
-            }
-            Command::Type => send_cmd(
-                &mut self.stream,
-                ResultCode::Ok,
-                "Transfer type changed successfully!",
-            ),
-            Command::List => {
-                if let Some(mut writer) = self.data_writer.take() {
-                    // Implement your logic to write the directory listing to the writer
-                    // For simplicity, we'll just send a sample listing
-                    writeln!(
-                        writer,
-                        "drwxr-xr-x  1 owner group  4096 Jan 1 00:00 dir1"
-                    )
-                    .unwrap();
-                    writeln!(
-                        writer,
-                        "-rw-r--r--  1 owner group 1024 Jan 1 00:00 file1.txt"
-                    )
-                    .unwrap();
-                    send_cmd(
-                        &mut self.stream,
-                        ResultCode::ClosingDataConnection,
-                        "Closing data connection.",
-                    );
-                } else {
-                    send_cmd(
-                        &mut self.stream,
-                        ResultCode::CantOpenDataConnection,
-                        "No data connection established.",
-                    );
-                }
-            }
-            Command::Pasv => {
+            },
+            Command::Type => send_cmd(&mut self.stream, ResultCode::Ok, "Switching to Binary mode."),
+            Command::List(_) => self.list(),
+            Command::Pasv => { // Re-implementing PASV
                 if self.data_writer.is_some() {
-                    send_cmd(
-                        &mut self.stream,
-                        ResultCode::DataConnectionAlreadyOpen,
-                        "Already listening...",
-                    );
+                    send_cmd(&mut self.stream, ResultCode::DataConnectionAlreadyOpen, "Already listening...");
                 } else {
                     let port = 43210;
 
-                    send_cmd(
-                        &mut self.stream,
-                        ResultCode::EnteringPassiveMode,
-                        &format!("127,0,0,1,{},{}", port >> 8, port & 0xFF),
-                    );
+                    // Calculate p1 and p2 for the PASV response (address is hardcoded as 127,0,0,1)
+                    let p1 = port / 256;
+                    let p2 = port % 256;
+                    send_cmd(&mut self.stream, ResultCode::EnteringPassiveMode, &format!("127,0,0,1,{},{}", p1, p2));
 
                     let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
                     let listener = TcpListener::bind(&addr).unwrap();
@@ -287,27 +269,82 @@ impl Client {
                     match listener.incoming().next() {
                         Some(Ok(client)) => {
                             self.data_writer = Some(client);
-                            send_cmd(
-                                &mut self.stream,
-                                ResultCode::DataConnectionOpen,
-                                "Data connection opened.",
-                            );
-                        }
+                        },
                         _ => {
-                            send_cmd(
-                                &mut self.stream,
-                                ResultCode::ServiceNotAvailable,
-                                "Issues happen...",
-                            );
+                            send_cmd(&mut self.stream, ResultCode::CantOpenDataConnection, "Failed to open data connection.");
                         }
                     }
                 }
+            },
+            Command::Cwd(directory) => self.cwd(directory),
+            Command::Cdup => {
+                // Using canonical parent path for better compatibility
+                let parent = self.cwd.parent().map(|p| p.to_path_buf()).unwrap_or(self.cwd.clone());
+                self.cwd(parent);
             }
-            Command::Unknown(s) => send_cmd(
-                &mut self.stream,
-                ResultCode::UnknownCommand,
-                "Not implemented",
-            ),
+            Command::Mkdir(directory) => {
+                let server_root = env::current_dir().unwrap();
+                let path = self.cwd.join(&directory);
+                if let Ok(dir) = self.complete_path(path, &server_root) {
+                    if let Err(_) = create_dir(&dir) {
+                        send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Couldn't create directory");
+                    } else {
+                        send_cmd(&mut self.stream, ResultCode::PATHNAMECreated, "Directory created");
+                    }
+                } else {
+                    send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Permission denied");
+                }
+            }
+            Command::Rmd(directory) => {
+                let server_root = env::current_dir().unwrap();
+                let path = self.cwd.join(&directory);
+                if let Ok(dir) = self.complete_path(path, &server_root) {
+                    if let Err(_) = remove_dir_all(&dir) {
+                        send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Couldn't remove directory");
+                    } else {
+                        send_cmd(&mut self.stream, ResultCode::RequestedFileActionOkay, "Directory removed");
+                    }
+                } else {
+                    send_cmd(&mut self.stream, ResultCode::FileNameNotAllowed, "Permission denied");
+                }
+            }
+            Command::Unknown(command) => {
+                send_cmd(&mut self.stream, ResultCode::UnknownCommand, &format!("Unknown command: {}", command));
+            }
+        }
+    }
+
+    fn list(&mut self) {
+        let server_root = env::current_dir().unwrap();
+        let path = self.cwd.join(".");
+        if let Ok(dir) = self.complete_path(path, &server_root) {
+            match read_dir(&dir) {
+                Ok(entries) => {
+                    let mut response = String::new();
+                    for entry in entries {
+                        if let Ok(entry) = entry {
+                            let metadata = entry.metadata().unwrap();
+                            let file_type = if metadata.is_dir() { "DIR" } else { "FILE" };
+                            response.push_str(&format!(
+                                "{}\t{}\t{}\r\n",
+                                file_type,
+                                metadata.len(),
+                                entry.file_name().to_string_lossy()
+                            ));
+                        }
+                    }
+                    send_cmd(&mut self.stream, ResultCode::DataConnectionAlreadyOpen, "Here comes the directory listing.");
+                    if let Some(ref mut writer) = self.data_writer {
+                        write!(writer, "{}\r\n", response).unwrap();
+                    }
+                    send_cmd(&mut self.stream, ResultCode::ClosingDataConnection, "Directory send OK.");
+                }
+                Err(_) => {
+                    send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "Failed to list directory.");
+                }
+            }
+        } else {
+            send_cmd(&mut self.stream, ResultCode::InvalidParameterOrArgument, "Permission denied");
         }
     }
 }
