@@ -303,7 +303,6 @@ impl Client {
                 return Err(std::io::Error::new(ErrorKind::PermissionDenied, "Permission denied"));
             }
         }
-
         Ok(directory)
     }
     /*
@@ -369,7 +368,7 @@ impl Client {
             and waits for the client to connect.
             Once the client connects, the `data_writer` field is set with the newly established data connection.
             */
-            Command::Pasv => { // Re-implementing PASV
+            Command::Pasv => {
                 if self.data_writer.is_some() {
                     send_cmd(&mut self.stream, ResultCode::DataConnectionAlreadyOpen, "Already listening...");
                 } else {
@@ -378,7 +377,8 @@ impl Client {
                     // Calculate p1 and p2 for the PASV response (address is hardcoded as 127,0,0,1)
                     let p1 = port / 256;
                     let p2 = port % 256;
-                    send_cmd(&mut self.stream, ResultCode::EnteringPassiveMode, &format!("127,0,0,1,{},{}", p1, p2));
+                    send_cmd(&mut self.stream, ResultCode::EnteringPassiveMode,
+                             &format!("Entering Passive Mode (127,0,0,1,{},{})", p1, p2));
 
                     let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
                     let listener = TcpListener::bind(&addr).unwrap();
