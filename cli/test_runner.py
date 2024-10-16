@@ -29,7 +29,8 @@ class TestRunner:
             ("FTP User Login Test", self.ftp_tester.test_ftp_user_login),
             ("FTP PWD Command Test", self.ftp_tester.test_ftp_pwd),
             ("FTP PASV and LIST Test", self.ftp_tester.test_ftp_pasv_and_list),
-            ("FTP File Upload and Download Test", self.ftp_tester.test_ftp_file_upload_and_download),
+            ("FTP File Upload and Download Test", self.ftp_tester.test_ftp_file_upload_and_download),   
+            ("FTP PASV and LIST Test for Comparison", self.ftp_tester.test_ftp_pasv_and_list),
         ]
 
         self.console.print_with_color("Running all tests...\n", 'bgreen')
