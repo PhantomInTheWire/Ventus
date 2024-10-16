@@ -1,126 +1,129 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupMainWindow(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(683, 512)
         MainWindow.setMinimumSize(QtCore.QSize(683, 512))
         MainWindow.setMaximumSize(QtCore.QSize(683, 512))
         MainWindow.setBaseSize(QtCore.QSize(1366, 1024))
+        MainWindow.setStyleSheet("#MainWindow {background: #000}")
         font = QtGui.QFont()
         font.setFamily("Montserrat Medium")
         MainWindow.setFont(font)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.pages = QtWidgets.QStackedWidget(self.centralwidget)
-        self.pages.setGeometry(QtCore.QRect(0, 0, 681, 511))
-        self.pages.setStyleSheet("#pages {\n"
-"    background-color: rgba(255, 255, 255, 0);\n"
-"}")
-        self.pages.setObjectName("pages")
-        self.connect_page = QtWidgets.QWidget()
-        self.connect_page.setObjectName("connect_page")
-        self.connectLabel = QtWidgets.QLabel(self.connect_page)
-        self.connectLabel.setGeometry(QtCore.QRect(110, 26, 91, 20))
+
+    def initializations(self):
+        self.is_connected = False
+
+    def createWidget(self, widget_name, parent=None):
+        if parent:
+            newWidget = QtWidgets.QWidget(parent)
+        else:
+            newWidget = QtWidgets.QWidget()
+        newWidget.setObjectName(widget_name)
+        return newWidget
+
+    def createStack(self, widget_name, parent, dimension):
+        newWidget = QtWidgets.QStackedWidget(parent)
+        newWidget.setGeometry(QtCore.QRect(*dimension))
+        newWidget.setStyleSheet("#%s { background-color: rgba(255, 255, 255, 0); }" % widget_name)
+        newWidget.setObjectName(widget_name)
+        return newWidget
+    
+    def createLabel(self, widget_name, parent, dimension, alignment="left"):
+        newWidget = QtWidgets.QLabel(parent)
+        newWidget.setGeometry(QtCore.QRect(*dimension))
+        newWidget.setMinimumSize(QtCore.QSize(*dimension[2:]))
+        newWidget.setMaximumSize(QtCore.QSize(*dimension[2:]))
+        newWidget.setStyleSheet("#%s {color: #dadada}" % widget_name)
         font = QtGui.QFont()
         font.setFamily("Montserrat SemiBold")
         font.setPointSize(14)
-        self.connectLabel.setFont(font)
-        self.connectLabel.setObjectName("connectLabel")
-        self.start_bg = QtWidgets.QLabel(self.connect_page)
-        self.start_bg.setGeometry(QtCore.QRect(460, 90, 121, 51))
-        self.start_bg.setText("")
-        self.start_bg.setPixmap(QtGui.QPixmap("assets/Start-connection-btn.png"))
-        self.start_bg.setScaledContents(True)
-        self.start_bg.setObjectName("start_bg")
-        self.connectCard = QtWidgets.QLabel(self.connect_page)
-        self.connectCard.setGeometry(QtCore.QRect(110, 70, 220, 89))
-        self.connectCard.setMinimumSize(QtCore.QSize(220, 89))
-        self.connectCard.setMaximumSize(QtCore.QSize(220, 89))
-        self.connectCard.setText("")
-        self.connectCard.setTextFormat(QtCore.Qt.PlainText)
-        self.connectCard.setPixmap(QtGui.QPixmap("assets/Connect-card.png"))
-        self.connectCard.setScaledContents(True)
-        self.connectCard.setObjectName("connectCard")
-        self.codeInput = QtWidgets.QTextEdit(self.connect_page)
-        self.codeInput.setGeometry(QtCore.QRect(150, 100, 111, 31))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.codeInput.sizePolicy().hasHeightForWidth())
-        self.codeInput.setSizePolicy(sizePolicy)
+        newWidget.setFont(font)
+        if alignment == "center":
+            newWidget.setAlignment(QtCore.Qt.AlignCenter)
+        newWidget.setText("")
+        newWidget.setTextFormat(QtCore.Qt.PlainText)
+        newWidget.setLineWidth(0)
+        newWidget.setAutoFillBackground(False)
+        newWidget.setObjectName(widget_name)
+        return newWidget
+    
+    def createImgLabel(self, widget_name, parent, dimension, img_src):
+        newWidget = QtWidgets.QLabel(parent)
+        newWidget.setGeometry(QtCore.QRect(*dimension))
+        newWidget.setMinimumSize(QtCore.QSize(*dimension[2:]))
+        newWidget.setMaximumSize(QtCore.QSize(*dimension[2:]))
+        newWidget.setText("")
+        newWidget.setLineWidth(0)
+        newWidget.setPixmap(QtGui.QPixmap(f"assets/{img_src}"))
+        newWidget.setScaledContents(True)
+        newWidget.setObjectName(widget_name)
+        return newWidget
+
+    def createSizePolicy(self, parent=None):
+        newSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        newSizePolicy.setHorizontalStretch(0)
+        newSizePolicy.setVerticalStretch(0)
+        newSizePolicy.setHeightForWidth(parent.sizePolicy().hasHeightForWidth())
+        return newSizePolicy
+
+    def createInput(self, widget_name, parent, dimension, size=10):
+        newWidget = QtWidgets.QTextEdit(parent)
+        newWidget.setGeometry(QtCore.QRect(*dimension))
+
+        sizePolicy = self.createSizePolicy(newWidget)
+        newWidget.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setFamily("Montserrat")
-        font.setPointSize(10)
-        self.codeInput.setFont(font)
-        self.codeInput.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.codeInput.setAutoFillBackground(False)
-        self.codeInput.setStyleSheet("#codeInput { background: transparent !important}")
-        self.codeInput.setInputMethodHints(QtCore.Qt.ImhNone)
-        self.codeInput.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.codeInput.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.codeInput.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
-        self.codeInput.setTabStopWidth(4)
-        self.codeInput.setAcceptRichText(False)
-        self.codeInput.setObjectName("codeInput")
-        self.startNetworkLabel = QtWidgets.QLabel(self.connect_page)
-        self.startNetworkLabel.setGeometry(QtCore.QRect(410, 30, 161, 20))
-        font = QtGui.QFont()
-        font.setFamily("Montserrat SemiBold")
-        font.setPointSize(14)
-        self.startNetworkLabel.setFont(font)
-        self.startNetworkLabel.setObjectName("startNetworkLabel")
-        self.startNetworkBtn = QtWidgets.QPushButton(self.connect_page)
-        self.startNetworkBtn.setGeometry(QtCore.QRect(460, 90, 121, 51))
-        self.startNetworkBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.startNetworkBtn.setStyleSheet("#connectBtn,\n"
-"#startNetworkBtn {\n"
-"    border-radius: 10;\n"
-"    background-color: rgba(255, 255, 255, 0);\n"
-"}")
-        self.startNetworkBtn.setText("")
-        self.startNetworkBtn.setCheckable(False)
-        self.startNetworkBtn.setChecked(False)
-        self.startNetworkBtn.setAutoDefault(False)
-        self.startNetworkBtn.setDefault(False)
-        self.startNetworkBtn.setFlat(True)
-        self.startNetworkBtn.setObjectName("startNetworkBtn")
-        self.startNetworkCard = QtWidgets.QLabel(self.connect_page)
-        self.startNetworkCard.setGeometry(QtCore.QRect(410, 70, 220, 89))
-        self.startNetworkCard.setMinimumSize(QtCore.QSize(220, 89))
-        self.startNetworkCard.setMaximumSize(QtCore.QSize(220, 89))
-        self.startNetworkCard.setText("")
-        self.startNetworkCard.setTextFormat(QtCore.Qt.PlainText)
-        self.startNetworkCard.setPixmap(QtGui.QPixmap("assets/start-network-card.png"))
-        self.startNetworkCard.setScaledContents(True)
-        self.startNetworkCard.setObjectName("startNetworkCard")
-        self.bg = QtWidgets.QLabel(self.connect_page)
-        self.bg.setGeometry(QtCore.QRect(0, 0, 681, 511))
-        self.bg.setMaximumSize(QtCore.QSize(1366, 16777215))
-        self.bg.setAutoFillBackground(False)
-        self.bg.setLineWidth(0)
-        self.bg.setText("")
-        self.bg.setTextFormat(QtCore.Qt.PlainText)
-        self.bg.setPixmap(QtGui.QPixmap("assets/Bg.png"))
-        self.bg.setScaledContents(True)
-        self.bg.setWordWrap(False)
-        self.bg.setObjectName("bg")
-        self.connectBtn = QtWidgets.QPushButton(self.connect_page)
-        self.connectBtn.setGeometry(QtCore.QRect(270, 100, 31, 31))
-        self.connectBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.connectBtn.setStyleSheet("#startNetworkBtn {\n"
-"    border-radius: 10;\n"
-"    background-color: rgba(255, 255, 255, 0);\n"
-"}")
-        self.connectBtn.setText("")
-        self.connectBtn.setCheckable(False)
-        self.connectBtn.setChecked(False)
-        self.connectBtn.setAutoDefault(False)
-        self.connectBtn.setDefault(False)
-        self.connectBtn.setFlat(True)
-        self.connectBtn.setObjectName("connectBtn")
-        self.connectBtn.clicked.connect(lambda: self.pages.setCurrentIndex(self.pages.currentIndex() + 1))
+        font.setPointSize(size)
+        newWidget.setFont(font)
+        newWidget.setFocusPolicy(QtCore.Qt.ClickFocus)
+        newWidget.setAutoFillBackground(False)
+        newWidget.setStyleSheet("#%s { background: transparent !important; color: #dadada; border: 0px #dadada !important;}" % widget_name)
+        newWidget.setInputMethodHints(QtCore.Qt.ImhNone)
+        newWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        newWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        newWidget.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        newWidget.setTabStopWidth(4)
+        newWidget.setAcceptRichText(False)
+        newWidget.setObjectName(widget_name)
+        return newWidget
+
+    def createBtn(self, widget_name, parent, dimension, handleClick):
+        newWidget = QtWidgets.QPushButton(parent)
+        newWidget.setGeometry(QtCore.QRect(*dimension))
+        newWidget.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        newWidget.setStyleSheet("#%s { border-radius: 10; background-color: rgba(255, 255, 255, 0); }" % widget_name)
+        newWidget.setText("")
+        newWidget.setCheckable(False)
+        newWidget.setChecked(False)
+        newWidget.setAutoDefault(False)
+        newWidget.setDefault(False)
+        newWidget.setFlat(True)
+        newWidget.setObjectName(widget_name)
+        newWidget.clicked.connect(handleClick)
+        return newWidget
+
+    def setupUi(self, MainWindow):
+        self.setupMainWindow(MainWindow)
+        self.initializations()
+
+        self.centralwidget = self.createWidget("centralwidget", MainWindow)
+        self.pages = self.createStack("pages", self.centralwidget, [0, 0, 681, 511])
+
+        # Connect Page
+        self.connect_page = self.createWidget("connect_page")
+        self.connectLabel = self.createLabel("connectLabel", self.connect_page, (110, 26, 91, 20))
+        self.start_bg = self.createImgLabel("start_bg", self.connect_page, (460, 90, 121, 51), "Start-connection-btn.png")
+        self.connectCard = self.createImgLabel("connectCard", self.connect_page, (110, 70, 220, 89), "Connect-card.png")
+        self.codeInput = self.createInput("codeInput", self.connect_page, (150, 100, 111, 31))
+        self.startNetworkLabel = self.createLabel("startNetworkLabel", self.connect_page, (410, 30, 161, 20))
+        self.startNetworkBtn = self.createBtn("startNetworkBtn", self.connect_page, (460, 90, 121, 51), lambda: self.handleStartNetwork)
+        self.startNetworkCard = self.createImgLabel("startNetworkCard", self.connect_page, (410, 70, 220, 89), "start-network-card.png")
+        self.bg = self.createImgLabel("bg", self.connect_page, (0, 0, 681, 511), "Bg.png")
+        self.connectBtn = self.createBtn("connectBtn", self.connect_page, (270, 98, 31, 31), self.handleConnect)
+        self.settingsBtn = self.createBtn("settingsBtn", self.connect_page, (22, 468, 21, 21), lambda: self.changePage("settings"))
         self.bg.raise_()
         self.connectLabel.raise_()
         self.connectCard.raise_()
@@ -130,108 +133,131 @@ class Ui_MainWindow(object):
         self.start_bg.raise_()
         self.connectBtn.raise_()
         self.startNetworkBtn.raise_()
+        self.settingsBtn.raise_()
         self.pages.addWidget(self.connect_page)
-        self.home_page = QtWidgets.QWidget()
-        self.home_page.setObjectName("home_page")
-        self.bg_2 = QtWidgets.QLabel(self.home_page)
-        self.bg_2.setGeometry(QtCore.QRect(0, 0, 681, 511))
-        self.bg_2.setMaximumSize(QtCore.QSize(1366, 16777215))
-        self.bg_2.setAutoFillBackground(False)
-        self.bg_2.setLineWidth(0)
-        self.bg_2.setText("")
-        self.bg_2.setTextFormat(QtCore.Qt.PlainText)
-        self.bg_2.setPixmap(QtGui.QPixmap("assets/Bg.png"))
-        self.bg_2.setScaledContents(True)
-        self.bg_2.setWordWrap(False)
-        self.bg_2.setObjectName("bg_2")
-        self.stopBg = QtWidgets.QLabel(self.home_page)
-        self.stopBg.setGeometry(QtCore.QRect(110, 70, 215, 88))
-        self.stopBg.setMinimumSize(QtCore.QSize(215, 88))
-        self.stopBg.setMaximumSize(QtCore.QSize(215, 88))
-        self.stopBg.setText("")
-        self.stopBg.setPixmap(QtGui.QPixmap("assets/stop-bg.png"))
-        self.stopBg.setScaledContents(True)
-        self.stopBg.setObjectName("stopBg")
-        self.networkInfoLabel = QtWidgets.QLabel(self.home_page)
-        self.networkInfoLabel.setGeometry(QtCore.QRect(110, 30, 221, 20))
-        font = QtGui.QFont()
-        font.setFamily("Montserrat SemiBold")
-        font.setPointSize(14)
-        self.networkInfoLabel.setFont(font)
-        self.networkInfoLabel.setObjectName("networkInfoLabel")
-        self.stopBtn = QtWidgets.QPushButton(self.home_page)
-        self.stopBtn.setGeometry(QtCore.QRect(160, 90, 111, 41))
-        self.stopBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.stopBtn.setStyleSheet("#connectBtn {\n"
-"    border-radius: 10;\n"
-"    background-color: rgba(255, 255, 255, 0);\n"
-"}\n"
-"#startNetworkBtn {\n"
-"    border-radius: 10;\n"
-"    background-color: rgba(255, 255, 255, 0);\n"
-"}")
-        self.stopBtn.setText("")
-        self.stopBtn.setCheckable(False)
-        self.stopBtn.setChecked(False)
-        self.stopBtn.setAutoDefault(False)
-        self.stopBtn.setDefault(False)
-        self.stopBtn.setFlat(True)
-        self.stopBtn.setObjectName("stopBtn")
-        self.stopBtn.clicked.connect(lambda: self.pages.setCurrentIndex(self.pages.currentIndex() - 1))
-        self.qrCode = QtWidgets.QLabel(self.home_page)
-        self.qrCode.setGeometry(QtCore.QRect(420, 100, 181, 171))
-        self.qrCode.setStyleSheet("#qrCode {border-radius:100px;}")
-        self.qrCode.setText("")
-        self.qrCode.setPixmap(QtGui.QPixmap("assets/qr-code.png"))
-        self.qrCode.setScaledContents(True)
-        self.qrCode.setObjectName("qrCode")
-        self.outputCode = QtWidgets.QLabel(self.home_page)
-        self.outputCode.setGeometry(QtCore.QRect(450, 310, 121, 20))
-        font = QtGui.QFont()
-        font.setFamily("Montserrat Medium")
-        font.setPointSize(12)
-        self.outputCode.setFont(font)
-        self.outputCode.setAlignment(QtCore.Qt.AlignCenter)
-        self.outputCode.setObjectName("outputCode")
-        self.stopBg_2 = QtWidgets.QLabel(self.home_page)
-        self.stopBg_2.setGeometry(QtCore.QRect(380, 70, 258, 312))
-        self.stopBg_2.setMinimumSize(QtCore.QSize(258, 312))
-        self.stopBg_2.setMaximumSize(QtCore.QSize(258, 312))
-        self.stopBg_2.setText("")
-        self.stopBg_2.setPixmap(QtGui.QPixmap("assets/qr-bg.png"))
-        self.stopBg_2.setScaledContents(True)
-        self.stopBg_2.setObjectName("stopBg_2")
-        self.networkInfoLabel_2 = QtWidgets.QLabel(self.home_page)
-        self.networkInfoLabel_2.setGeometry(QtCore.QRect(380, 30, 221, 20))
-        font = QtGui.QFont()
-        font.setFamily("Montserrat SemiBold")
-        font.setPointSize(14)
-        self.networkInfoLabel_2.setFont(font)
-        self.networkInfoLabel_2.setObjectName("networkInfoLabel_2")
+
+
+        # <----- Home Page ----->
+        self.home_page = self.createWidget("home_page")
+        self.bg_2 = self.createImgLabel("bg_2", self.home_page, (0, 0, 681, 511), "Bg.png")
+        self.stopBg = self.createImgLabel("stopBg", self.home_page, (110, 70, 215, 88), "stop-bg.png")
+        self.networkInfoLabel = self.createLabel("networkInfoLabel", self.home_page, (110, 27, 221, 20))
+        self.stopBtn = self.createBtn("connectBtn", self.home_page, (160, 90, 111, 41), self.handleStop)
+
+        self.qrCodeLabel = self.createLabel("networkInfoLabel", self.home_page, (380, 27, 90, 20))
+        self.qrCode = self.createImgLabel("qrCode", self.home_page, (420, 100, 181, 171), "qr-code.png")
+        self.outputCode = self.createLabel("outputCode", self.home_page, (435, 310, 138, 30), "center")
+        self.stopBg_2 = self.createImgLabel("stopBg_2", self.home_page, (380, 70, 258, 312), "qr-bg.png")
+        self.connectionLabel = self.createLabel("connectionLabel", self.home_page, (380, 29, 221, 20))
+        self.settingsBtn_1 = self.createBtn("settingsBtn_1", self.home_page, (22, 468, 21, 21), lambda: self.changePage("settings"))
+
         self.bg_2.raise_()
         self.stopBg.raise_()
         self.networkInfoLabel.raise_()
         self.stopBtn.raise_()
+        self.qrCodeLabel.raise_()
         self.stopBg_2.raise_()
-        self.networkInfoLabel_2.raise_()
+        self.connectionLabel.raise_()
         self.qrCode.raise_()
         self.outputCode.raise_()
+        self.settingsBtn_1.raise_()
         self.pages.addWidget(self.home_page)
+
+
+        # <----- Settings page ----->
+        self.settings_page = self.createWidget("settings_page")
+        self.bg_3 = self.createImgLabel("bg_3", self.settings_page, (0, 0, 681, 511), "Bg.png")
+        self.arrowLeft = self.createImgLabel("arrowLeft", self.settings_page, (100, 30, 23, 23), "arrowLeft.png")
+        self.settingsTitle = self.createLabel("settingsTitle", self.settings_page, (140, 30, 211, 21))
+
+        # General settings
+        self.generalSettingsLabel = self.createLabel("generalLabel", self.settings_page, (100, 70, 81, 20))
+        self.generalCard = self.createImgLabel("generalCard", self.settings_page, (100, 100, 236, 120), "GeneralSettings.png")
+        self.deviceName = self.createInput("deviceName", self.settings_page, (150, 130, 111, 31), 8)
+        self.folderName = self.createInput("folderName", self.settings_page, (150, 180, 131, 21), 8)
+
+        # Connection settings
+        self.connectionSettingsLabel = self.createLabel("connectionSettingsLabel", self.settings_page, (380, 70, 121, 20))
+        # self.connectionTitle = self.createInput("connectionTitle", self.settings_page, (380, 70, 121, 20))
+        self.connectionCard = self.createImgLabel("connectionCard", self.settings_page, (380, 100, 260, 172), "ConnectionSettings.png")
+        self.maxConn = self.createInput("maxConn", self.settings_page, (430, 130, 111, 31), 8)
+        self.maxRate = self.createInput("maxRate", self.settings_page, (430, 180, 111, 31), 8)
+        self.sizeLimit = self.createInput("sizeLimit", self.settings_page, (430, 230, 111, 31), 8)
+        
+        # Network settings
+        self.networkSettingsLabel = self.createLabel("networkSettingsLabel", self.settings_page, (100, 270, 88, 20))
+        self.settingsBtn_2 = self.createBtn("settingsBtn_2", self.settings_page, (23, 468, 21, 21), lambda: self.changePage('settings'))
+        self.backBtn = self.createBtn("backBtn", self.settings_page, (102, 31, 21, 21), self.handle_back_nav)
+        self.networkSettingsCard = self.createImgLabel("networkSettingsCard", self.settings_page, (100, 300, 236, 188), "NetworkSettings.png")
+        
+        # if self.is_connected:
+        self.pages.addWidget(self.settings_page)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
+        self.settingsBtn.clicked.connect(self.pages.update)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Ventus"))
-        self.connectLabel.setText(_translate("MainWindow", "Connect"))
-        self.codeInput.setPlaceholderText(_translate("MainWindow", "Enter code"))
-        self.startNetworkLabel.setText(_translate("MainWindow", "Start a network"))
-        self.networkInfoLabel.setText(_translate("MainWindow", "Connection"))
-        self.outputCode.setText(_translate("MainWindow", "abc - defg - hij"))
-        self.networkInfoLabel_2.setText(_translate("MainWindow", "Network"))
 
+        self.set_init_text({
+            self.connectLabel: "Connect",
+            self.startNetworkLabel: "Start a network",
+            self.networkInfoLabel: "Connection",
+            self.qrCodeLabel: "QR Code",
+            self.outputCode: "abc - defg - hij",
+            self.settingsTitle: "Settings",
+            self.generalSettingsLabel: "General",
+            self.networkSettingsLabel: "Network",
+            self.connectionSettingsLabel: "Connection",
+        }, _translate)
+        self.set_init_placeholder({
+            self.codeInput: "Enter code",
+            self.deviceName: "Inspiron 5508",
+            self.folderName: "Downloads/Ventus",
+            self.maxConn: "5 devices",
+            self.maxRate: "5 GB/s",
+            self.sizeLimit: "10 GB",
+        }, _translate)
+    
+    def set_init_text(self, data, _translate):
+        for (prop, value) in data.items():
+            prop.setText(_translate("MainWindow", value))
+    
+    def set_init_placeholder(self, data, _translate):
+        for (prop, value) in data.items():
+            prop.setPlaceholderText(_translate("MainWindow", value))
+
+    def handle_network_connect(self, new_status=False):
+        self.is_connected = new_status
+    
+    def handleConnect(self):
+        # print(self.codeInput, type(self.codeInput))
+        # print(self.codeInput.toPlainText())
+        if not self.codeInput.toPlainText():
+            return
+        self.handle_network_connect(True)
+        self.changePage('home')
+    
+    def handleStartNetwork(self):
+        pass
+
+    def handleStop(self):
+        self.handle_network_connect(False)
+        self.changePage('connect')
+    
+    def changePage(self, index):
+        PAGES = {
+            "connect": 0,
+            "home": 1,
+            "settings": 2
+        }
+        self.pages.setCurrentIndex(PAGES.get(index, 0))
+    
+    def handle_back_nav(self):
+        self.changePage('home') if self.is_connected else self.changePage('connect')
 
 if __name__ == "__main__":
     import sys
