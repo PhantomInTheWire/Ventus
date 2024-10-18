@@ -103,13 +103,26 @@ impl Client {
                 } else {
                     let port = 43210; // Or choose a random available port
 
+                    // Get local IP
+                    let local_ip = self.stream.local_addr().unwrap().ip();
+
                     // Calculate p1 and p2 for the PASV response (address is hardcoded as 127,0,0,1)
                     let p1 = port / 256;
                     let p2 = port % 256;
-                    send_cmd(&mut self.stream, ResultCode::EnteringPassiveMode,
-                             &format!("Entering Passive Mode (127,0,0,1,{},{})", p1, p2));
 
-                    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
+                    let ip_parts: Vec<u8> = match local_ip {
+                        IpAddr::V4(ip) => ip.octets().to_vec(),
+                        _ => vec![127, 0, 0, 1], // Fallback to localhost if not IPv4
+                    };
+
+                    send_cmd(
+                        &mut self.stream,
+                        ResultCode::EnteringPassiveMode,
+                        &format!("Entering Passive Mode ({},{},{},{},{},{})",
+                                 ip_parts[0], ip_parts[1], ip_parts[2], ip_parts[3], p1, p2),
+                    );
+
+                    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port);
                     let listener = TcpListener::bind(&addr).unwrap();
 
                     match listener.incoming().next() {
@@ -117,7 +130,10 @@ impl Client {
                             self.data_writer = Some(client);
                         },
                         _ => {
-                            send_cmd(&mut self.stream, ResultCode::CantOpenDataConnection, "Failed to open data connection.");
+                            send_cmd(&mut self.stream,
+                                     ResultCode::CantOpenDataConnection,
+                                     "Failed to open data connection."
+                            );
                         }
                     }
                 }
