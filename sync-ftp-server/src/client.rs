@@ -121,19 +121,29 @@ impl Client {
                         &format!("Entering Passive Mode ({},{},{},{},{},{})",
                                  ip_parts[0], ip_parts[1], ip_parts[2], ip_parts[3], p1, p2),
                     );
-
-                    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port);
-                    let listener = TcpListener::bind(&addr).unwrap();
+                    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port); // Bind to all interfaces
+                    let listener = match TcpListener::bind(&addr) {
+                        Ok(listener) => listener,
+                        Err(e) => {
+                            println!("Error binding to data port: {}", e);
+                            send_cmd(&mut self.stream, ResultCode::CantOpenDataConnection, "Failed to open data connection.");
+                            return;
+                        }
+                    };
 
                     match listener.incoming().next() {
                         Some(Ok(client)) => {
                             self.data_writer = Some(client);
                         },
-                        _ => {
-                            send_cmd(&mut self.stream,
-                                     ResultCode::CantOpenDataConnection,
-                                     "Failed to open data connection."
-                            );
+                        Some(Err(e)) => {
+                            println!("Error accepting data connection: {}", e);
+                            send_cmd(&mut self.stream, ResultCode::CantOpenDataConnection, "Failed to open data connection.");
+                            return;
+                        }
+                        None => {
+                            println!("No incoming data connection.");
+                            send_cmd(&mut self.stream, ResultCode::CantOpenDataConnection, "Failed to open data connection.");
+                            return;
                         }
                     }
                 }
