@@ -1,9 +1,15 @@
 from ftp_tester import FtpTester
 from ftp_utils import ConsoleUtils
-
+import sys
 class TestRunner:
     def __init__(self):
-        self.ftp_tester = FtpTester()
+        if len(sys.argv) != 3:
+            print("Usage: python ftp_tester.py <ftp_host> <ftp_port>")
+            sys.exit(1)
+        ftp_host = sys.argv[1]
+        ftp_port = int(sys.argv[2])
+        
+        self.ftp_tester = FtpTester(ftp_host, ftp_port)
         self.console = ConsoleUtils()
 
     def run_test(self, test_name, test_func):

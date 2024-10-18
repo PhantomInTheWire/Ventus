@@ -2,12 +2,8 @@ import socket
 import os
 from ftp_utils import ConsoleUtils
 
-# FTP server details
-FTP_HOST = "127.0.0.1"
-FTP_PORT = 1234
-
 class FtpTester:
-    def __init__(self, ftp_host=FTP_HOST, ftp_port=FTP_PORT):
+    def __init__(self, ftp_host, ftp_port):
         self.ftp_host = ftp_host
         self.ftp_port = ftp_port
         self.console = ConsoleUtils()
