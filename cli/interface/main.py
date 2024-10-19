@@ -1,263 +1,190 @@
-import socket
-import os
 import argparse
+import os
+import socket
+from logging import exception
 
 from ftp_utils import ConsoleUtils
 
-
-class FtpCli:
+class FtpClient:
     def __init__(self, ftp_host, ftp_port):
         self.ftp_host = ftp_host
         self.ftp_port = ftp_port
         self.console = ConsoleUtils()
-        self.control_socket = None  # Socket for control commands
-        self.data_socket = None    # Socket for data transfer
+        self.timeout = 10
 
     def connect(self):
-        """Connects to the FTP server."""
-        self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.control_socket.connect((self.ftp_host, self.ftp_port))
-        response = self.control_socket.recv(1024).decode("utf-8")
+        """Establishes a connection to the FTP server."""
+        self.console.print_with_color(f"Connecting to {self.ftp_host}:{self.ftp_port}", 'purple')
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.ftp_host, self.ftp_port))
+        response = s.recv(1024).decode("utf-8")
         self.console.print_with_color(f"Response: {response}", 'cyan')
-        if not response.startswith("220"):
-            raise Exception("Could not connect to FTP server")
+        assert "220" in response  # FTP welcome message
+        return s
 
-    def login(self, username, password):
-        """Logs in to the FTP server."""
-        self.send_command(f"USER {username}")
-        response = self.receive_response()
-        if not response.startswith("230"):
-            self.send_command(f"PASS {password}")
-            response = self.receive_response()
-            if not response.startswith("230"):
-                raise Exception("Could not log in")
+    def login(self, s, user="testuser"):
+        """Logs into the FTP server."""
+        s.sendall(f"USER {user}\r\n".encode("utf-8"))
+        response = s.recv(1024).decode("utf-8")
+        self.console.print_with_color(f"Response after login: {response}", 'cyan')
+        assert "230" in response  # Login successful
 
-    def send_command(self, command):
-        """Sends a command to the FTP server (control socket)."""
-        self.console.print_with_color(f"Sending command: {command}", 'purple')
-        self.control_socket.sendall(f"{command}\r\n".encode("utf-8"))
+    def pasv_mode(self, s):
+        """Enters passive mode and returns data connection details."""
+        s.sendall(b"PASV\r\n")
+        response = s.recv(1024).decode("utf-8")
+        self.console.print_with_color(f"Response after PASV: {response}", 'yellow')
+        assert "227" in response
 
-    def receive_response(self):
-        """Receives a response from the FTP server (control socket)."""
-        response = self.control_socket.recv(1024).decode("utf-8")
-        self.console.print_with_color(f"Response: {response}", 'cyan')
-        return response
-
-    def enter_passive_mode(self):
-        """Enters passive mode and gets data connection details."""
-        self.send_command("PASV")
-        response = self.receive_response()
-        if not response.startswith("227"):
-            raise Exception("Could not enter passive mode")
-
-        # Parse the IP and port from the PASV response
-        start = response.find("(") + 1
-        end = response.find(")")
-        numbers = response[start:end].split(",")
-        data_host = ".".join(numbers[:4])
-        data_port = int(numbers[4]) * 256 + int(numbers[5])
+        pasv_info = response.split("(")[1].split(")")[0].split(",")
+        data_host = ".".join(pasv_info[:4])
+        data_port = int(pasv_info[4]) * 256 + int(pasv_info[5])
         return data_host, data_port
 
-    def open_data_connection(self, data_host, data_port):
-        """Opens a new data connection."""
-        self.data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_socket.connect((data_host, data_port))
+    def upload_file(self, filename):
+        """Uploads a file to the FTP server."""
+        if not os.path.exists(filename):
+            self.console.print_with_color(f"File {filename} does not exist for upload.", 'red')
+            return
 
-    def close_data_connection(self):
-        """Closes the data connection."""
-        if self.data_socket:
-            self.data_socket.close()
-            self.data_socket = None
+        s = self.connect()
+        self.login(s)
+        data_host, data_port = self.pasv_mode(s)
 
-    def list(self, directory=""):
-        """Lists files in the current directory."""
-        try:
-            data_host, data_port = self.enter_passive_mode()
-            self.open_data_connection(data_host, data_port) 
-            self.send_command(f"LIST {directory}")
-            response = self.receive_response() 
-            if not response.startswith("150") and not response.startswith("125"):
-                raise Exception("Could not list files")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as data_socket:
+            data_socket.connect((data_host, data_port))
+            s.sendall(f"STOR {filename}\r\n".encode("utf-8"))
+            response = s.recv(1024).decode("utf-8")
+            assert "150" in response
 
-            while True:
-                data = self.data_socket.recv(1024).decode("utf-8", errors="ignore")
-                if not data:
-                    break
-                print(data, end="")
-
-            response = self.receive_response()  
-            if not response.startswith("226"):
-                raise Exception("Could not list files")
-
-        except Exception as e:
-            print(f"Error during LIST: {e}")
-        finally:
-            self.close_data_connection()  
-
-    def cwd(self, directory):
-        """Changes the current working directory."""
-        self.send_command(f"CWD {directory}")
-        response = self.receive_response()
-        if not response.startswith("250"):
-            raise Exception("Could not change directory")
-
-    def cdup(self):
-        """Changes to the parent directory."""
-        self.send_command("CDUP")
-        response = self.receive_response()
-        if not response.startswith("250") and not response.startswith("200"):
-            raise Exception("Could not change to parent directory")
-
-    def pwd(self):
-        """Prints the current working directory."""
-        self.send_command("PWD")
-        response = self.receive_response()
-        if not response.startswith("257"):
-            raise Exception("Could not get current working directory")
-        start = response.find("\"") + 1
-        end = response.find("\"", start)
-        print(response[start:end])
-
-    def mkdir(self, directory):
-        """Creates a new directory."""
-        self.send_command(f"MKD {directory}")
-        response = self.receive_response()
-        if not response.startswith("257"):
-            raise Exception("Could not create directory")
-
-    def rmd(self, directory):
-        """Removes a directory."""
-        self.send_command(f"RMD {directory}")
-        response = self.receive_response()
-        if not response.startswith("250"):
-            raise Exception("Could not remove directory")
-
-    def stor(self, local_file, remote_file):
-        """Uploads a file to the server."""
-        try:
-            if not os.path.exists(local_file):
-                raise Exception(f"Local file {local_file} not found")
-
-            data_host, data_port = self.enter_passive_mode()
-            self.open_data_connection(data_host, data_port)  
-            self.send_command(f"STOR {remote_file}")
-            response = self.receive_response()
-            if not response.startswith("150"):
-                raise Exception("Could not start upload")
-
-            with open(local_file, "rb") as f:
+            with open(filename, "rb") as f:
                 while chunk := f.read(4096):
-                    self.data_socket.sendall(chunk)
+                    data_socket.sendall(chunk)
+            data_socket.close()
+            try:
+                response = s.recv(1024).decode("utf-8")
+                self.console.print_with_color(f"Upload of {filename} completed: {response}", 'bcyan')
+                assert "226" in response
+            except socket.timeout:
+                self.console.print_with_color(f"Timeout waiting for server response after uploading {filename}", 'red')
 
-            response = self.receive_response()  
-            if not response.startswith("226"):
-                raise Exception("Upload failed")
-        except Exception as e:
-            print(f"Error during STOR: {e}")
-        finally:
-            self.close_data_connection()
+    def download_file(self, filename):
+        """Downloads a file from the FTP server."""
+        s = self.connect()
+        self.login(s)
+        data_host, data_port = self.pasv_mode(s)
 
-    def retr(self, remote_file, local_file):
-        """Downloads a file from the server."""
-        try:
-            data_host, data_port = self.enter_passive_mode()
-            self.open_data_connection(data_host, data_port) 
-            self.send_command(f"RETR {remote_file}")
-            response = self.receive_response()
-            if not response.startswith("150"):
-                raise Exception("Could not start download")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as data_socket:
+            data_socket.connect((data_host, data_port))
+            s.sendall(f"RETR {filename}\r\n".encode("utf-8"))
+            response = s.recv(1024).decode("utf-8")
+            assert "150" in response
 
-            with open(local_file, "wb") as f:
-                while data := self.data_socket.recv(4096):
+            with open(filename, "wb") as f:
+                while data := data_socket.recv(4096):
                     f.write(data)
+            data_socket.close()
+            try:
+                response = s.recv(1024).decode("utf-8")
+                self.console.print_with_color(f"Download of {filename} completed: {response}", 'bcyan')
+                assert "226" in response
 
-            response = self.receive_response() 
-            if not response.startswith("226"):
-                raise Exception("Download failed")
-        except Exception as e:
-            print(f"Error during RETR: {e}")
-        finally:
-            self.close_data_connection()
+            except socket.timeout:
+                self.console.print_with_color(f"Timeout waiting for server response after downloading {filename}", 'red')
 
-    def quit(self):
-        """Quits the FTP session."""
-        self.send_command("QUIT")
-        self.control_socket.close()
+    def sync(self, local_dir, remote_dir):
+        """
+        Syncs files between a local directory and the server.
+        """
+        self.console.print_with_color(f"Starting sync between {local_dir} and {remote_dir}", 'purple')
+        
+        # This is a simple implementation. It can be extended with checksums or timestamp comparisons.
+        local_files = set(os.listdir(local_dir))
+        # Placeholder for fetching remote files - typically requires parsing `LIST` output
+        remote_files = self.list_files(remote_dir)
 
+        # Files to upload
+        for filename in local_files - remote_files:
+            try:
+                self.upload_file(os.path.join(local_dir, filename))
+            except exception as e:
+                self.console.print_with_color(f"this is not supposed: {e} ")
+
+        # Files to download
+        for filename in remote_files - local_files:
+            try:
+                self.download_file(os.path.join(remote_dir, filename))
+            except exception as e:
+                self.console.print_with_color(f"this is not supposed: {e} ")
+
+        self.console.print_with_color("Sync completed.", 'bgreen')
+
+    def list_files(self, remote_dir):
+        """
+        Lists files in the specified remote directory.
+        Returns a set of filenames (excluding directories).
+        """
+        self.console.print_with_color(f"Listing files in remote directory: {remote_dir}", 'purple')
+    
+        # Connect to the server and log in
+        s = self.connect()
+        self.login(s)
+    
+        # Change working directory to the remote directory
+        s.sendall(f"CWD {remote_dir}\r\n".encode("utf-8")) 
+        response = s.recv(1024).decode("utf-8")
+        self.console.print_with_color(f"Response after CWD: {response}", 'yellow')
+        assert "250" in response or "200" in response  # Successful directory change
+    
+        # Enter passive mode and get data connection details
+        data_host, data_port = self.pasv_mode(s)
+    
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as data_socket:
+            data_socket.connect((data_host, data_port))
+            s.sendall(b"LIST\r\n")  # List the current working directory (which is now 'files')
+            response = s.recv(1024).decode("utf-8")
+            self.console.print_with_color(f"Response after LIST: {response}", 'yellow')
+            assert "150" in response or "125" in response  # Check for a response indicating the server is sending data
+    
+            # Receive the directory listing from the data connection
+            listing = data_socket.recv(4096).decode("utf-8")
+            self.console.print_with_color(f"Directory listing:\n{listing}", 'bcyan')
+    
+            # Extract filenames from the listing (Robust for the provided format)
+            filenames = set()
+            for line in listing.splitlines():
+                parts = line.split()
+                if len(parts) >= 3 and parts[0] != "DIR":  # Check if it's a file and not a directory
+                    filenames.add(parts[-1])  # Filename is the last part
+    
+            response = s.recv(1024).decode("utf-8")
+            self.console.print_with_color(f"Response after data transfer: {response}", 'bcyan')
+            assert "226" in response  # Successful transfer completion
+    
+        s.close()
+        return filenames
+    
 
 def main():
-    console = ConsoleUtils()
-    console.display_ascii_art()
-
-    parser = argparse.ArgumentParser(description="FTP Client")
-    parser.add_argument("host", help="FTP server host")
-    parser.add_argument("port", type=int, help="FTP server port")
-    parser.add_argument("-u", "--username", default="anonymous", help="FTP username")
-    parser.add_argument("-p", "--password", default="", help="FTP password")
+    parser = argparse.ArgumentParser(description='FTP Client for testing and syncing.')
+    parser.add_argument('command', choices=['upload', 'download', 'sync'], help='Command to execute.')
+    parser.add_argument('--host', required=True, help='FTP server host.')
+    parser.add_argument('--port', type=int, required=True, help='FTP server port.')
+    parser.add_argument('--file', help='File to upload or download.')
+    parser.add_argument('--local-dir', help='Local directory for sync.')
+    parser.add_argument('--remote-dir', help='Remote directory for sync.')
     args = parser.parse_args()
 
-    ftp = FtpCli(args.host, args.port)
-    try:
-        ftp.connect()
-        ftp.login(args.username, args.password)
+    ftp_client = FtpClient(args.host, args.port)
 
-        while True:
-            command = input("ftp> ")
-            parts = command.split()
-            if not parts:
-                continue
-
-            cmd = parts[0].lower()
-
-            if cmd == "ls" or cmd == "list":
-                if len(parts) > 1:
-                    ftp.list(parts[1])
-                else:
-                    ftp.list()
-            elif cmd == "cd":
-                if len(parts) > 1:
-                    ftp.cwd(parts[1])
-                else:
-                    print("Usage: cd <directory>")
-            elif cmd == "cdup":
-                ftp.cdup()
-            elif cmd == "pwd":
-                ftp.pwd()
-            elif cmd == "mkdir":
-                if len(parts) > 1:
-                    ftp.mkdir(parts[1])
-                else:
-                    print("Usage: mkdir <directory>")
-            elif cmd == "rmd" or cmd == "rmdir":
-                if len(parts) > 1:
-                    ftp.rmd(parts[1])
-                else:
-                    print("Usage: rmd <directory>")
-            elif cmd == "put" or cmd == "stor":
-                if len(parts) == 3:
-                    ftp.stor(parts[1], parts[2])
-                elif len(parts) == 2:
-                    ftp.stor(parts[1], parts[1]) 
-                else:
-                    print("Usage: put <local_file> [<remote_file>]")
-            elif cmd == "get" or cmd == "retr":
-                if len(parts) == 3:
-                    ftp.retr(parts[1], parts[2])
-                elif len(parts) == 2:
-                    ftp.retr(parts[1], parts[1]) 
-                else:
-                    print("Usage: get <remote_file> [<local_file>]")
-            elif cmd == "quit" or cmd == "exit":
-                ftp.quit()
-                break
-            else:
-                print("Invalid command")
-
-    except Exception as e:
-        print(f"Error: {e}")
-        if ftp.control_socket:
-            ftp.control_socket.close()
-
+    if args.command == 'upload' and args.file:
+        ftp_client.upload_file(args.file)
+    elif args.command == 'download' and args.file:
+        ftp_client.download_file(args.file)
+    elif args.command == 'sync' and args.local_dir and args.remote_dir:
+        ftp_client.sync(args.local_dir, args.remote_dir)
+    else:
+        print("Invalid arguments for the chosen command. Use --help for more information.")
 
 if __name__ == "__main__":
     main()
