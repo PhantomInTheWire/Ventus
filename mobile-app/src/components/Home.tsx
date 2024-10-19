@@ -1,7 +1,10 @@
 import { ImageBackground, StyleSheet, View } from "react-native";
 import TitleBar from "./TitleBar";
 import { Link } from "expo-router";
-import { Card } from "./ui";
+import { Card, HorizontalLine } from "./ui";
+import Chart from "./Chart";
+import CustomPieChart from "./PieChart";
+import Arc from "./Arc";
 
 const bgImg = require("@/assets/images/bg.png");
 
@@ -13,7 +16,12 @@ export default function Home() {
       <Link style={styles.title} href="./connect">
         Sync
       </Link>
-      <Card></Card>
+      <Card py={20} mt={20}>
+        <Chart />
+        {/* <CustomPieChart /> */}
+        {/* <Arc /> */}
+        <HorizontalLine />
+      </Card>
     </ImageBackground>
     // </View>
   );

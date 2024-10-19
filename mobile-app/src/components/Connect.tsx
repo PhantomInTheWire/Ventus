@@ -26,7 +26,7 @@ export default function Connect() {
       <Text className="text-2xl text-[#dadada]" style={styles.title}>
         Connect
       </Text>
-      <Card mt={20}>
+      <Card mt={20} py={30}>
         <CustomButton
           onPress={navigateToHome}
           active={true}

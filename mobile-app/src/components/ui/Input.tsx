@@ -38,7 +38,7 @@ export default function CustomInput(props: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 40,
+    marginVertical: 0,
   },
   input: {
     borderRadius: 12,

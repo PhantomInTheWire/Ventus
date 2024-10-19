@@ -17,7 +17,7 @@ export default function CustomButton(props: Props) {
     <View
       style={{
         ...styles.container,
-        marginVertical: props.marginVertical ?? 40,
+        marginVertical: props.marginVertical ?? 0,
       }}
     >
       {active ? (

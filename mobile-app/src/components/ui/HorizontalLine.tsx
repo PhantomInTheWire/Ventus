@@ -8,5 +8,6 @@ const styles = StyleSheet.create({
     width: "70%",
     borderWidth: 1,
     borderColor: "#FFFFFF08",
+    marginVertical: 30,
   },
 });
