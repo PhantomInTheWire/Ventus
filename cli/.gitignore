@@ -1,3 +1,5 @@
 __pycache__/
 .venv/
+.idea/
+.idea/*
 sample2.pdf
