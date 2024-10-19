@@ -8,18 +8,18 @@ import Arc from "./Arc";
 
 const bgImg = require("@/assets/images/bg.png");
 
-export default function Home() {
+export default function Settings() {
   return (
     // <View style={{ flex: 1 }}>
     <ImageBackground source={bgImg} resizeMode="cover" style={styles.container}>
-      <TitleBar icons={["back", "settings"]} />
-      <Text style={styles.title}>Sync</Text>
+      <TitleBar icons={["back"]} />
+      <Text style={styles.title}>General Settings</Text>
       <Card py={20} mt={20}>
-        <Chart />
+        {/* <Chart /> */}
         {/* <CustomPieChart /> */}
         {/* <Arc /> */}
         <HorizontalLine />
-        <Text style={styles.text}>192.168.124.20:1234</Text>
+        <Text>192.168.124.20:1234</Text>
       </Card>
       <Card></Card>
     </ImageBackground>
@@ -36,9 +36,5 @@ const styles = StyleSheet.create({
     color: "#dadada",
     fontSize: 30,
     marginTop: 10,
-  },
-  text: {
-    color: "#dadada",
-    fontSize: 25,
   },
 });

@@ -1,7 +1,13 @@
-import { View, SafeAreaView, StatusBar } from "react-native";
-import { MenuIcon, NotificationIcon } from "@/icons";
+import { View, SafeAreaView, StatusBar, Pressable } from "react-native";
+import { BackIcon, MenuIcon, NotificationIcon, SettingsIcon } from "@/icons";
+import { Link, useRouter } from "expo-router";
 
-export default function TitleBar() {
+interface Props {
+  icons?: string[];
+}
+
+export default function TitleBar(props: Props) {
+  const router = useRouter();
   return (
     <SafeAreaView>
       <View
@@ -9,9 +15,19 @@ export default function TitleBar() {
         style={{ paddingTop: 50 }}
       >
         <StatusBar barStyle={"light-content"} />
-        <MenuIcon />
+        {props.icons?.includes("back") && (
+          <Pressable onPress={router.back}>
+            <BackIcon />
+          </Pressable>
+        )}
+        {props.icons?.includes("menu") && <MenuIcon />}
+        {props.icons?.includes("settings") && (
+          <Link href="settings">
+            <SettingsIcon />
+          </Link>
+        )}
+        {/* {props.icons?.includes('notification') && <MenuIcon />} */}
         {/* <Text className="text-4xl text-red-400">Hello!</Text> */}
-        <NotificationIcon />
       </View>
     </SafeAreaView>
   );
