@@ -1,41 +1,51 @@
-import { ImageBackground, Text, View } from "react-native";
+import { ImageBackground, StyleSheet, Text } from "react-native";
 import TitleBar from "./TitleBar";
 import Card from "./ui/Card";
 import { CustomButton, HorizontalLine } from "./ui";
 import { InputIcon, QrScanIcon } from "@/icons";
+import CustomInput from "./ui/Input";
 
 const bgImage = require("@/assets/images/bg.png");
 
 export default function Connect() {
   return (
-    <View style={{ flex: 1 }}>
-      <ImageBackground source={bgImage} resizeMode="cover" style={{ flex: 1 }}>
-        <TitleBar />
-        <View className="mt-4 space-y-4 px-4">
-          <Text
-            className="text-2xl text-[#dadada]"
-            style={{ fontFamily: "MMedium" }}
-          >
-            Connect
-          </Text>
-          <Card>
-            <CustomButton
-              onPress={() => alert("Connecting!")}
-              active={true}
-              icon={<QrScanIcon />}
-            >
-              Connect
-            </CustomButton>
-            <HorizontalLine />
-            <CustomButton
-              onPress={() => alert("Processing code!")}
-              icon={<InputIcon />}
-            >
-              Connect
-            </CustomButton>
-          </Card>
-        </View>
-      </ImageBackground>
-    </View>
+    <ImageBackground
+      source={bgImage}
+      resizeMode="cover"
+      style={{
+        ...styles.container,
+      }}
+    >
+      <TitleBar />
+
+      <Text className="text-2xl text-[#dadada]" style={styles.title}>
+        Connect
+      </Text>
+      <Card mt={20}>
+        <CustomButton
+          onPress={() => alert("Connecting!")}
+          active={true}
+          icon={<QrScanIcon />}
+        >
+          Scan
+        </CustomButton>
+        <HorizontalLine />
+        <CustomInput icon={<InputIcon />} placeholder="Enter code" />
+      </Card>
+    </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  title: {
+    color: "#dadada",
+    fontSize: 25,
+    marginTop: 10,
+    fontFamily: "MSemiBold",
+    fontWeight: 700,
+  },
+});

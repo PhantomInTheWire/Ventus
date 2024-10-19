@@ -1,72 +1,96 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Card } from "./";
 
 interface Props {
   active?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   icon?: React.ReactNode;
+  marginVertical?: number;
   size?: "sm" | "lg";
   onPress: () => void;
 }
 
 export default function CustomButton(props: Props) {
-  const [active, size] = [props.active ?? false, props.size ?? "sm"];
+  const [active, size] = [props.active ?? false, props.size ?? "lg"];
   return (
-    <View className="flex-1">
+    <View
+      style={{
+        ...styles.container,
+        marginVertical: props.marginVertical ?? 40,
+      }}
+    >
       {active ? (
         <Pressable
-          style={{ ...styles.btn, ...styles.active, backgroundColor: "red" }}
+          style={{
+            ...styles.btn,
+            ...styles.btnActive,
+            ...(size === "sm" ? styles.btnSm : styles.btnLg),
+          }}
           onPress={props.onPress}
         >
           {props.icon && <View style={{ ...styles.icon }}>{props.icon}</View>}
-          <Text
-            className="text-2xl"
-            style={{
-              ...styles.text,
-              fontFamily: "MMedium",
-              fontSize: 25,
-              // color: "#dadada",
-            }}
-          >
-            {props.children}
-          </Text>
+          {props.children && (
+            <Text
+              style={{
+                ...styles.text,
+                ...styles.textActive,
+              }}
+            >
+              {props.children}
+            </Text>
+          )}
         </Pressable>
       ) : (
-        <LinearGradient
-          className="w-full h-full flex items-center py-20 rounded-2xl"
-          colors={["#ffffff0A", "#ffffff00"]}
-          style={{}}
-        >
-          <Pressable onPress={props.onPress} style={styles.btn}>
+        <Card>
+          <Pressable
+            onPress={props.onPress}
+            style={{
+              ...styles.btn,
+              ...(size === "sm" ? styles.btnSm : styles.btnLg),
+            }}
+          >
             {props.icon && <View style={{ ...styles.icon }}>{props.icon}</View>}
-            <Text style={{ ...styles.text }}>{props.children}</Text>
+            <Text style={{ ...styles.text }}>
+              {props.children && props.children}
+            </Text>
           </Pressable>
-        </LinearGradient>
+        </Card>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {},
   btn: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 12,
+  },
+  btnSm: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  btnLg: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: "red",
   },
-  active: {
+  btnActive: {
+    gap: 10,
     backgroundColor: "#dadada",
+    fontFamily: "MSemiBold",
+    fontWeight: 700,
   },
   icon: {},
   text: {
-    // color: "#dadada",
-    marginLeft: 10,
-    alignItems: "center",
+    color: "#dadada",
     fontSize: 20,
-    fontWeight: 800,
-    fontFamily: "MBold",
+  },
+  textActive: {
+    fontFamily: "MMedium",
+    fontSize: 25,
+    fontWeight: 600,
+    color: "#1A1D21",
   },
 });

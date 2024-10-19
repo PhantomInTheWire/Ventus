@@ -7,7 +7,6 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-// import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 
@@ -19,10 +18,10 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded, error] = useFonts({
-    // SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-    // Montserrat: require("../assets/fonts/SixtyfourConvergence-Regular.ttf"),
     MRegular: require("../assets/fonts/Montserrat-Regular.ttf"),
     MMedium: require("../assets/fonts/Montserrat-Medium.ttf"),
+    MSemiBold: require("../assets/fonts/Montserrat-SemiBold.ttf"),
+    MBold: require("../assets/fonts/Montserrat-Bold.ttf"),
   });
 
   useEffect(() => {

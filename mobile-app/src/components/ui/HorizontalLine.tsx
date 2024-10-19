@@ -5,8 +5,8 @@ export default function HorizontalLine() {
 }
 const styles = StyleSheet.create({
   borderElem: {
-    width: "80%",
-    borderWidth: 2,
+    width: "70%",
+    borderWidth: 1,
     borderColor: "#FFFFFF08",
   },
 });
