@@ -1,6 +1,5 @@
-import { View } from "react-native";
-import { Home } from "@/components";
+import { Connect } from "@/components";
 
 export default function App() {
-  return <Home />;
+  return <Connect />;
 }

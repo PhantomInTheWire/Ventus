@@ -4,10 +4,15 @@ import Card from "./ui/Card";
 import { CustomButton, HorizontalLine } from "./ui";
 import { InputIcon, QrScanIcon } from "@/icons";
 import CustomInput from "./ui/Input";
+import { useRouter } from "expo-router";
 
 const bgImage = require("@/assets/images/bg.png");
 
 export default function Connect() {
+  const router = useRouter();
+  const navigateToHome = () => {
+    router.push("/home");
+  };
   return (
     <ImageBackground
       source={bgImage}
@@ -23,7 +28,7 @@ export default function Connect() {
       </Text>
       <Card mt={20}>
         <CustomButton
-          onPress={() => alert("Connecting!")}
+          onPress={navigateToHome}
           active={true}
           icon={<QrScanIcon />}
         >

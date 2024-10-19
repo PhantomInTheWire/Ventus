@@ -32,11 +32,11 @@ export default function Root({ children }: PropsWithChildren) {
 
 const responsiveBackground = `
 body {
-  background-color: #1A1D21;
+  background-color: #1A1D21 !important;
 }
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #1A1D21;
+    background-color: #1A1D21 !important;
     font-family: 'Montserrat', sans-serif;
   }
 }`;
