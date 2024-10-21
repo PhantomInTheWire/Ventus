@@ -249,7 +249,7 @@ class Ui_MainWindow(object):
     
         # Call the CLI sync function
         try:
-            print(system(f"python ../cli/interface/main.py --host {host} --port 1234 --local-dir {os.path.abspath(local_dir)} --remote-dir files sync"))
+            print(system(f"python ../cli/interface/main.py --host {host} --port 1234 --local-dir {local_dir} --remote-dir files sync"))
         except subprocess.CalledProcessError as e:
             print("Error:", e.stderr)  # Handle errors, can also display in GUI
     
