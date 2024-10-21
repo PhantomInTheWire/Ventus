@@ -1,4 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+import subprocess
+from os import system
+import os
 
 class Ui_MainWindow(object):
     def setupMainWindow(self, MainWindow):
@@ -233,13 +236,22 @@ class Ui_MainWindow(object):
     def handle_network_connect(self, new_status=False):
         self.is_connected = new_status
     
+
     def handleConnect(self):
-        # print(self.codeInput, type(self.codeInput))
-        # print(self.codeInput.toPlainText())
         if not self.codeInput.toPlainText():
             return
         self.handle_network_connect(True)
-        self.changePage('home')
+    
+        # Get the local directory from the settings
+        local_dir = self.folderName.toPlainText()# Assuming this is where the local folder is set
+        remote_dir = "files"  # As per your requirement
+        host = self.codeInput.toPlainText()  # Get the IP address or code input
+    
+        # Call the CLI sync function
+        try:
+            print(system(f"python ../cli/interface/main.py --host {host} --port 1234 --local-dir {os.path.abspath(local_dir)} --remote-dir files sync"))
+        except subprocess.CalledProcessError as e:
+            print("Error:", e.stderr)  # Handle errors, can also display in GUI
     
     def handleStartNetwork(self):
         pass
