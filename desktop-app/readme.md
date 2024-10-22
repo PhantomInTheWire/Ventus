@@ -9,15 +9,15 @@ Ventus is a cross-platform desktop application designed to facilitate easy and s
 
 **Connect Screen:**
 
-![Connect Screen](https://github.com/<your-username>/<your-repo-name>/blob/main/desktop-app/screenshots/connect_screen.png)
+![Connect Screen](https://github.com/PhantomInTheWire/Ventus/tree/main/screenshots/connect_screen.png)
 
 **Home Screen (Active Network):**
 
-![Home Screen](https://github.com/<your-username>/<your-repo-name>/blob/main/desktop-app/screenshots/home_screen.png)
+![Home Screen](https://github.com/PhantomInTheWire/Ventus/tree/main/screenshots/home_screen.png)
 
 **Settings Screen:**
 
-![Settings Screen](https://github.com/<your-username>/<your-repo-name>/blob/main/desktop-app/screenshots/settings_screen.png)
+![Settings Screen](https://github.com/PhantomInTheWire/Ventus/tree/main/screenshots/settings_screen.png)
 
 ## Features
 
