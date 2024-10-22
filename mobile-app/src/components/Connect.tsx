@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ImageBackground, StyleSheet, Text, TextInput } from "react-native";
-import TitleBar from "./TitleBar";
-import Card from "./ui/Card";
-import { CustomButton, HorizontalLine } from "./ui";
-import { InputIcon, QrScanIcon, LinkIcon } from "@/icons";
-import CustomInput from "./ui/Input";
 import { useRouter } from "expo-router";
+import TitleBar from "./TitleBar";
+import { Card, CustomButton, HorizontalLine } from "./ui";
+import { InputIcon, QrScanIcon, LinkIcon } from "@/icons";
 import useAuthStore from "@/store/auth";
 
 const bgImage = require("@/assets/images/bg.png");
@@ -23,9 +21,7 @@ export default function Connect() {
     connect(textInput);
     router.replace("./home");
   };
-  // useEffect(() => {
-  //   disconnect();
-  // }, []);
+
   return (
     <ImageBackground
       source={bgImage}
@@ -88,6 +84,5 @@ const styles = StyleSheet.create({
     fontSize: 25,
     marginTop: 10,
     fontFamily: "MMedium",
-    // fontWeight: 700,
   },
 });
