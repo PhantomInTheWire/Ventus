@@ -10,20 +10,6 @@ class Ui_MainWindow(object):
         self.widget_factory = WidgetFactory()
         self.network_handlers = NetworkHandlers()
 
-    def setupUi(self, MainWindow):
-        """Main setup method for the UI"""
-        self.setupMainWindow(MainWindow)
-        self.create_central_widget(MainWindow)
-        self.create_pages()
-        self.create_connect_page()
-        self.create_home_page()
-        self.create_settings_page()
-        self.setup_translations(MainWindow)
-        self.setup_event_connections()
-        self.load_settings()
-        
-        MainWindow.setCentralWidget(self.centralwidget)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def setupMainWindow(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -58,7 +44,7 @@ class Ui_MainWindow(object):
         self.connectBtn = self.create_btn("connectBtn", self.connect_page, (270, 98, 31, 31), self.handle_connect)
         self.settingsBtn = self.create_btn("settingsBtn", self.connect_page, (22, 468, 21, 21), lambda: self.change_page("settings"))
 
-        # Raise widgets in correct order
+        # Set widget order
         self.raise_connect_page_widgets()
         self.pages.addWidget(self.connect_page)
 
@@ -88,6 +74,7 @@ class Ui_MainWindow(object):
         self.raise_home_page_widgets()
         self.pages.addWidget(self.home_page)
 
+
     def show_file_explorer(self):
         """Toggle file explorer visibility"""
         if self.file_explorer.isVisible():
@@ -106,16 +93,21 @@ class Ui_MainWindow(object):
             self.outputCode.hide()
             # Refresh file explorer
             self.file_explorer.refresh()
-
+            
+            
     def create_settings_page(self):
         # Create settings page widgets
         self.bg_3 = self.widget_factory.create_img_label("bg_3", self.settings_page, (0, 0, 681, 511), "Bg.png")
         self.arrowLeft = self.widget_factory.create_img_label("arrowLeft", self.settings_page, (100, 30, 23, 23), "arrowLeft.png")
         self.settingsTitle = self.widget_factory.create_label("settingsTitle", self.settings_page, (140, 30, 211, 21))
 
-        # Create settings sections
+        # General settings section
         self.create_general_settings()
+        
+        # Connection settings section
         self.create_connection_settings()
+        
+        # Network settings section
         self.create_network_settings()
 
         self.settingsBtn_2 = self.create_btn("settingsBtn_2", self.settings_page, (23, 468, 21, 21), lambda: self.change_page('settings'))
@@ -201,7 +193,6 @@ class Ui_MainWindow(object):
         self.qrCode.raise_()
         self.outputCode.raise_()
         self.settingsBtn_1.raise_()
-        self.directoryBtn.raise_()
 
     def setup_translations(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -224,7 +215,7 @@ class Ui_MainWindow(object):
         self.set_init_placeholder({
             self.codeInput: "Enter code",
             self.deviceName: "Legion slim 5",
-            self.folderName: "files",  # Changed to default files directory
+            self.folderName: "Downloads/Ventus",
             self.maxConn: "5 devices",
             self.maxRate: "5 GB/s",
             self.sizeLimit: "10 GB",
@@ -238,116 +229,50 @@ class Ui_MainWindow(object):
         for (prop, value) in data.items():
             prop.setPlaceholderText(_translate("MainWindow", value))
 
+    # Event handlers
     def handle_network_connect(self, new_status=False):
-        """Update connection status"""
-        if self.is_connected != new_status:  # Only update if status actually changes
-            self.is_connected = new_status
-            self.update_connection_status(new_status)
+        self.is_connected = new_status
 
-    def handle_start_network(self):
-        """Handle network start"""
-        if not self.is_connected:  # Only proceed if not already connected
-            success = self.network_handlers.handle_start_network()
-            if success:
-                self.handle_network_connect(True)
-                self.change_page("home") 
-                self.show_success_message("Connected", "Successfully connected to network")
-            else:
-                self.show_error_message("Connection Failed", "Unable to establish connection")
-        
-        # Change to home page after successful connection
-                return True
-        return False
     
-    def setup_event_connections(self):
-        """Setup event handlers for various UI elements"""
-        # Text change handlers
-        self.deviceName.textChanged.connect(self.save_settings)
-        self.folderName.textChanged.connect(self.save_settings)
-        self.maxConn.textChanged.connect(self.save_settings)
-        self.maxRate.textChanged.connect(self.save_settings)
-        self.sizeLimit.textChanged.connect(self.save_settings)
-
-    def load_settings(self):
-        """Load saved settings from QSettings"""
-        settings = QtCore.QSettings('Ventus', 'Desktop')
-        
-        # Load text values
-        self.deviceName.setText(settings.value('deviceName', 'Legion slim 5'))
-        self.folderName.setText(settings.value('folderName', 'files'))
-        self.maxConn.setText(settings.value('maxConn', '5 devices'))
-        self.maxRate.setText(settings.value('maxRate', '5 GB/s'))
-        self.sizeLimit.setText(settings.value('sizeLimit', '10 GB'))
-
-    def save_settings(self):
-        """Save current settings to QSettings"""
-        settings = QtCore.QSettings('Ventus', 'Desktop')
-        # Save text values
-        settings.setValue('deviceName', self.deviceName.toPlainText())
-        settings.setValue('folderName', self.folderName.toPlainText())
-        settings.setValue('maxConn', self.maxConn.toPlainText())
-        settings.setValue('maxRate', self.maxRate.toPlainText())
-        settings.setValue('sizeLimit', self.sizeLimit.toPlainText())
-
-    def handle_connect(self):
-        """Handle connection attempt"""
-        if not self.is_connected:  # Only proceed if not already connected
-            code = self.codeInput.toPlainText().strip()
-            folder_path = self.folderName.toPlainText().strip() or "files"  # Use files as default
-            
-            success = self.network_handlers.handle_connect(code, folder_path)
-            if success:
-                self.handle_network_connect(True)
-                self.change_page("home")
+    def handle_start_network(self):
+        success = self.network_handlers.handle_start_network()
+        if success:
+            self.handle_network_connect(True)
+            self.change_page('home')
 
     def handle_stop(self):
-        """Enhanced stop handler"""
-        try:
-            self.network_handlers.handle_stop_network()
-            self.handle_network_connect(False)
-            self.update_connection_status(False)
-            self.change_page('connect')
-            self.show_success_message("Network Stopped", "Network successfully stopped")
-        except Exception as e:
-            self.show_error_message("Stop Error", f"An error occurred: {str(e)}")
-
+        self.network_handlers.handle_stop_network()
+        self.handle_network_connect(False)
+        self.change_page('connect')
 
     def handle_back_nav(self):
-        """Handle back navigation from settings"""
-        if self.is_connected:
-            self.change_page("home")
-        else:
-            self.change_page("connect")
+        self.change_page('home' if self.is_connected else 'connect')
 
-    def change_page(self, page_name):
-        """Change current page based on name"""
-        page_index = {
+    def change_page(self, index):
+        PAGES = {
             "connect": 0,
             "home": 1,
             "settings": 2
-        }.get(page_name, 0)
-        
-        self.pages.setCurrentIndex(page_index)
+        }
+        self.pages.setCurrentIndex(PAGES.get(index, 0))
+        # Add these methods to the Ui_MainWindow class:
 
-    def update_connection_status(self, is_connected):
+    def update_connection_status(self, is_connected, connection_code=None):
         """Update UI elements based on connection status"""
-        # Update QR code and connection info when connected
+        self.is_connected = is_connected
         if is_connected:
-            # Here you would update the QR code image and connection info
-            self.qrCodeLabel.setText("Connected")
-            self.networkInfoLabel.setText("Network Active")
+            self.outputCode.setText(connection_code or "Connected")
+            self.connectionLabel.setText("Connected")
+            self.networkInfoLabel.setText("Active Network")
+            # Update QR code if available
+            if connection_code:
+                # Here you would generate and update QR code
+                pass
         else:
-            # Reset labels when disconnected
             self.outputCode.setText("")
             self.connectionLabel.setText("Disconnected")
+            self.networkInfoLabel.setText("Network Inactive")
 
-        # Clear input when disconnecting
-        if not is_connected:
-            self.codeInput.setText("")
-            
-        # Update internal state
-        self.is_connected = is_connected
-        
     def show_error_message(self, title, message):
         """Display error message dialog"""
         msg = QtWidgets.QMessageBox()
@@ -363,4 +288,142 @@ class Ui_MainWindow(object):
         msg.setWindowTitle(title)
         msg.setText(message)
         msg.exec_()
-    
+
+    def validate_settings(self):
+        """Validate all settings inputs"""
+        if not self.deviceName.toPlainText().strip():
+            self.show_error_message("Invalid Settings", "Device name cannot be empty")
+            return False
+        
+        if not self.folderName.toPlainText().strip():
+            self.show_error_message("Invalid Settings", "Folder path cannot be empty")
+            return False
+        
+        try:
+            max_conn = int(self.maxConn.toPlainText().split()[0])
+            if max_conn <= 0:
+                raise ValueError
+        except (ValueError, IndexError):
+            self.show_error_message("Invalid Settings", "Max connections must be a positive number")
+            return False
+        
+        try:
+            size_limit = float(self.sizeLimit.toPlainText().split()[0])
+            if size_limit <= 0:
+                raise ValueError
+        except (ValueError, IndexError):
+            self.show_error_message("Invalid Settings", "Size limit must be a positive number")
+            return False
+        
+        return True
+
+    def save_settings(self):
+        """Save current settings"""
+        if not self.validate_settings():
+            return False
+        
+        settings = {
+            'device_name': self.deviceName.toPlainText().strip(),
+            'folder_path': self.folderName.toPlainText().strip(),
+            'max_connections': self.maxConn.toPlainText().strip(),
+            'max_rate': self.maxRate.toPlainText().strip(),
+            'size_limit': self.sizeLimit.toPlainText().strip()
+        }
+        
+        # Here you would implement actual settings storage
+        # For example, using QSettings or a config file
+        return True
+
+    def load_settings(self):
+        """Load saved settings"""
+        # Here you would implement loading settings from storage
+        # This is a placeholder implementation
+        settings = {
+            'device_name': "Legion slim 5",
+            'folder_path': "files",
+            'max_connections': "5 devices",
+            'max_rate': "5 GB/s",
+            'size_limit': "10 GB"
+        }
+        
+        self.deviceName.setPlainText(settings['device_name'])
+        self.folderName.setPlainText(settings['folder_path'])
+        self.maxConn.setPlainText(settings['max_connections'])
+        self.maxRate.setPlainText(settings['max_rate'])
+        self.sizeLimit.setPlainText(settings['size_limit'])
+
+    # Enhanced event handlers
+    def handle_connect(self):
+        """Enhanced connect handler with error handling"""
+        if not self.codeInput.toPlainText():
+            self.show_error_message("Connection Error", "Please enter a connection code")
+            return
+        
+        if not self.is_connected:  # Only proceed if not already connected
+            code = self.codeInput.toPlainText().strip()
+            folder_path = self.folderName.toPlainText().strip() or "files"  # Use files as default
+            
+            success = self.network_handlers.handle_connect(code, folder_path)
+            if success:
+                self.handle_network_connect(True)
+                self.change_page("home")
+            
+            
+    def handle_start_network(self):
+        """Enhanced network start handler"""
+        try:
+            success = self.network_handlers.handle_start_network()
+            if success:
+                self.handle_network_connect(True)
+                # Generate a new connection code
+                connection_code = "abc-defg-hij"  # This should be generated
+                self.update_connection_status(True, connection_code)
+                self.change_page('home')
+                self.show_success_message("Network Started", 
+                                        f"Network successfully started\nConnection code: {connection_code}")
+            else:
+                self.show_error_message("Network Error", "Failed to start network")
+        except Exception as e:
+            self.show_error_message("Network Error", f"An error occurred: {str(e)}")
+
+    def handle_stop(self):
+        """Enhanced stop handler"""
+        try:
+            self.network_handlers.handle_stop_network()
+            self.handle_network_connect(False)
+            self.update_connection_status(False)
+            self.change_page('connect')
+            self.show_success_message("Network Stopped", "Network successfully stopped")
+        except Exception as e:
+            self.show_error_message("Stop Error", f"An error occurred: {str(e)}")
+
+    def setup_event_connections(self):
+        """Setup all event connections"""
+        # Connect page
+        self.connectBtn.clicked.connect(self.handle_connect)
+        self.startNetworkBtn.clicked.connect(self.handle_start_network)
+        self.settingsBtn.clicked.connect(lambda: self.change_page("settings"))
+        
+        # Home page
+        self.stopBtn.clicked.connect(self.handle_stop)
+        self.settingsBtn_1.clicked.connect(lambda: self.change_page("settings"))
+        self.directoryBtn.clicked.connect(self.show_file_explorer)  # Add this line
+        
+        # Settings page
+        self.backBtn.clicked.connect(self.handle_back_nav)
+        self.settingsBtn_2.clicked.connect(lambda: self.change_page("settings"))
+
+    def setupUi(self, MainWindow):
+        """Enhanced setupUi with additional initializations"""
+        self.setupMainWindow(MainWindow)
+        self.create_central_widget(MainWindow)
+        self.create_pages()
+        self.create_connect_page()
+        self.create_home_page()
+        self.create_settings_page()
+        self.setup_translations(MainWindow)
+        self.setup_event_connections()
+        self.load_settings()
+        
+        MainWindow.setCentralWidget(self.centralwidget)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
