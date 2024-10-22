@@ -1,18 +1,31 @@
-import { ImageBackground, StyleSheet, Text } from "react-native";
+import { useEffect, useState } from "react";
+import { ImageBackground, StyleSheet, Text, TextInput } from "react-native";
 import TitleBar from "./TitleBar";
 import Card from "./ui/Card";
 import { CustomButton, HorizontalLine } from "./ui";
-import { InputIcon, QrScanIcon } from "@/icons";
+import { InputIcon, QrScanIcon, LinkIcon } from "@/icons";
 import CustomInput from "./ui/Input";
 import { useRouter } from "expo-router";
+import useAuthStore from "@/store/auth";
 
 const bgImage = require("@/assets/images/bg.png");
 
 export default function Connect() {
+  const [textInput, setTextInput] = useState<string>("");
   const router = useRouter();
   const navigateToHome = () => {
     router.push("/home");
   };
+
+  const connect = useAuthStore((state) => state.connect);
+  const disconnect = useAuthStore((state) => state.disconnect);
+  const connectToNetwork = () => {
+    connect(textInput);
+    router.replace("./home");
+  };
+  // useEffect(() => {
+  //   disconnect();
+  // }, []);
   return (
     <ImageBackground
       source={bgImage}
@@ -21,7 +34,7 @@ export default function Connect() {
         ...styles.container,
       }}
     >
-      <TitleBar />
+      <TitleBar icons={["settings"]} justify="flex-end" />
 
       <Text className="text-[#dadada]" style={styles.title}>
         Connect
@@ -35,7 +48,31 @@ export default function Connect() {
           Scan
         </CustomButton>
         <HorizontalLine />
-        <CustomInput icon={<InputIcon />} placeholder="Enter code" />
+        <Card flexDirection="row" px={10} py={0}>
+          <InputIcon />
+          <TextInput
+            style={{
+              borderRadius: 12,
+              paddingHorizontal: 10,
+              paddingVertical: 10,
+              color: "#dadada",
+              fontSize: 20,
+              width: 180,
+            }}
+            onChangeText={(newText) => setTextInput(newText)}
+            placeholder="Enter code"
+            cursorColor={"#dadada"}
+            placeholderTextColor={"#dadada3A"}
+            maxLength={15}
+          />
+          <CustomButton
+            active={true}
+            size="sm"
+            onPress={connectToNetwork}
+            icon={<LinkIcon />}
+            marginVertical={0}
+          />
+        </Card>
       </Card>
     </ImageBackground>
   );

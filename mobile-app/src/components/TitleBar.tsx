@@ -3,6 +3,7 @@ import { BackIcon, MenuIcon, NotificationIcon, SettingsIcon } from "@/icons";
 import { Link, useRouter } from "expo-router";
 
 interface Props {
+  justify?: "flex-end";
   icons?: string[];
 }
 
@@ -12,9 +13,13 @@ export default function TitleBar(props: Props) {
     <SafeAreaView>
       <View
         className="flex-row items-center justify-between py-2"
-        style={{ paddingTop: 50 }}
+        style={{
+          paddingTop: 50,
+          justifyContent: props.justify ?? "space-between",
+        }}
       >
         <StatusBar barStyle={"light-content"} />
+
         {props.icons?.includes("back") && (
           <Pressable onPress={router.back}>
             <BackIcon />

@@ -8,6 +8,7 @@ interface Props {
   className?: string;
   icon?: React.ReactNode;
   placeholder?: string;
+  onPress: () => void;
 }
 
 export default function CustomInput(props: Props) {
@@ -27,7 +28,7 @@ export default function CustomInput(props: Props) {
         <CustomButton
           active={true}
           size="sm"
-          onPress={() => alert("Connecting with code!")}
+          onPress={props.onPress}
           icon={<LinkIcon />}
           marginVertical={0}
         />
