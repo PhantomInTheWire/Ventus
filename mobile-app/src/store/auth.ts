@@ -11,20 +11,23 @@ const useAuthStore = create<AuthStore>((set) => ({
   isConnected: false,
   port: null,
   connect: (newPort: string) => {
-    set((state) => ({
-      ...state,
-      isConnected: true,
-      port: newPort,
-    }));
-    console.log(`Connected to ${newPort}!`);
+    set((state: AuthStore) => {
+      if (newPort === state.port) return state;
+      console.info(`Connected to ${newPort}!`);
+      return {
+        ...state,
+        isConnected: true,
+        port: newPort,
+      };
+    });
   },
   disconnect: () => {
-    set((state) => ({
+    set((state: AuthStore) => ({
       ...state,
       isConnected: false,
       port: null,
     }));
-    console.log("Disconnected!");
+    console.warn("Disconnected!");
   },
 }));
 

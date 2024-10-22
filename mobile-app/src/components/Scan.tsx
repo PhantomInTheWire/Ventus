@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Button, TouchableOpacity } from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import useAuthStore from "@/store/auth";
+import { BackIcon, SwitchCamera } from "@/icons";
 
 export default function Scan() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
+  const [scannedData, setScannedData] = useState<string | null>(null);
   const router = useRouter();
   const connect = useAuthStore((state) => state.connect);
 
@@ -18,9 +20,11 @@ export default function Scan() {
     setFacing((current) => (current === "back" ? "front" : "back"));
   }
   const handleScan = ({ data }: { data: string }) => {
+    if (scannedData) return;
+
     router.push("./home");
     connect(data);
-    // console.log("Scanned QR code:", data);
+    setScannedData(data);
   };
 
   return (
@@ -34,12 +38,31 @@ export default function Scan() {
           }}
           onBarcodeScanned={handleScan}
         >
+          <View
+            style={{
+              ...styles.buttonContainer,
+              flex: 0,
+              marginHorizontal: 0,
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                ...styles.button,
+                flex: 0,
+                alignSelf: "flex-start",
+                marginLeft: 20,
+              }}
+              onPress={router.back}
+            >
+              <BackIcon />
+            </TouchableOpacity>
+          </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.button}
               onPress={toggleCameraFacing}
             >
-              <Text style={styles.text}>Flip Camera</Text>
+              <SwitchCamera />
             </TouchableOpacity>
           </View>
         </CameraView>
@@ -51,6 +74,7 @@ export default function Scan() {
           <Button onPress={requestPermission} title="grant permission" />
         </>
       )}
+      {/* <TitleBar icons={["back"]} /> */}
     </View>
   );
 }

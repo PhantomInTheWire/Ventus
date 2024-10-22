@@ -3,8 +3,10 @@ import { BackIcon, MenuIcon, NotificationIcon, SettingsIcon } from "@/icons";
 import { Link, useRouter } from "expo-router";
 
 interface Props {
-  justify?: "flex-end";
+  justify?: "flex-end" | "center";
   icons?: string[];
+  px?: number;
+  pt?: number;
 }
 
 export default function TitleBar(props: Props) {
@@ -14,8 +16,9 @@ export default function TitleBar(props: Props) {
       <View
         className="flex-row items-center justify-between py-2"
         style={{
-          paddingTop: 50,
+          paddingTop: props.pt ?? 50,
           justifyContent: props.justify ?? "space-between",
+          paddingHorizontal: props.px ?? 0,
         }}
       >
         <StatusBar barStyle={"light-content"} />

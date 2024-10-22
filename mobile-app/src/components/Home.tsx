@@ -6,18 +6,20 @@ import {
 } from "react-native";
 import TitleBar from "./TitleBar";
 import { Card, HorizontalLine } from "./ui";
+import useAuthStore from "@/store/auth";
 
 const bgImg = require("@/assets/images/bg.png");
 
 export default function Home() {
+  const port = useAuthStore((state) => state.port);
   return (
     <ImageBackground source={bgImg} resizeMode="cover" style={styles.container}>
       <TitleBar icons={["settings"]} justify="flex-end" />
-      <Text style={styles.title}>Sync</Text>
+      <Text style={styles.title}>Status</Text>
       <Card py={25} pb={25} px={30} mt={10}>
         <ActivityIndicator size="large" color={"#dadada"} />
         <HorizontalLine />
-        <Text style={styles.text}>192.168.124.20:1234</Text>
+        <Text style={styles.text}>{port}</Text>
       </Card>
     </ImageBackground>
   );

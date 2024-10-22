@@ -6,6 +6,7 @@ import MenuIcon from "./Menu";
 import NotificationIcon from "./Notification";
 import QrScanIcon from "./QrScan";
 import SettingsIcon from "./Settings";
+import SwitchCamera from "./SwitchCamera";
 import UploadIcon from "./Upload";
 
 export {
@@ -15,7 +16,8 @@ export {
   LinkIcon,
   MenuIcon,
   NotificationIcon,
-  SettingsIcon,
   QrScanIcon,
+  SettingsIcon,
+  SwitchCamera,
   UploadIcon,
 };
