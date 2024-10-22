@@ -105,17 +105,11 @@ class FtpClient:
 
         # Files to upload
         for filename in local_files - remote_files:
-            try:
-                self.upload_file(os.path.join(local_dir, filename))
-            except exception as e:
-                self.console.print_with_color(f"this is not supposed: {e} ")
+            self.upload_file(os.path.join(local_dir, filename))
 
         # Files to download
         for filename in remote_files - local_files:
-            try:
-                self.download_file(os.path.join(remote_dir, filename))
-            except exception as e:
-                self.console.print_with_color(f"this is not supposed: {e} ")
+            self.download_file(os.path.join(remote_dir, filename))
 
         self.console.print_with_color("Sync completed.", 'bgreen')
 
