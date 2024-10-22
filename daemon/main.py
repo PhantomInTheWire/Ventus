@@ -1,77 +1,138 @@
-import daemon
-import signal
-import lockfile
+import time
+import logging
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import sys
+import os
 from pathlib import Path
+from datetime import datetime, timedelta
+import threading
 
-class DirectoryMonitorDaemon:
-    def __init__(self, watch_path, host, port, remote_dir, pid_file):
-        self.watch_path = watch_path
-        self.host = host
-        self.port = port
-        self.remote_dir = remote_dir
-        self.pid_file = pid_file
-        self.monitor = None
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    handlers=[
+        logging.FileHandler('filesystem_monitor.log'),
+        logging.StreamHandler()
+    ]
+)
 
-    def run(self):
-        # Setup signal handlers
-        signal.signal(signal.SIGTERM, self.handle_signal)
-        signal.signal(signal.SIGHUP, self.handle_signal)
 
+class ChangeHandler(FileSystemEventHandler):
+    """Handles file system events"""
+
+    def __init__(self, process_function):
+        self.process_function = process_function
+        super().__init__()
+
+    def on_created(self, event):
+        if not event.is_directory:
+            logging.info(f"File created: {event.src_path}")
+            self.process_function(event.src_path, trigger_type="file_change")
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            logging.info(f"File modified: {event.src_path}")
+            self.process_function(event.src_path, trigger_type="file_change")
+
+    def on_deleted(self, event):
+        if not event.is_directory:
+            logging.info(f"File deleted: {event.src_path}")
+            self.process_function(event.src_path, trigger_type="file_change")
+
+
+class ScheduledProcessor:
+    """Handles scheduled processing"""
+
+    def __init__(self, process_function, interval_hours=2):
+        self.process_function = process_function
+        self.interval_hours = interval_hours
+        self.stop_flag = False
+        self.thread = threading.Thread(target=self._run)
+        self.thread.daemon = True
+
+    def start(self):
+        self.thread.start()
+
+    def stop(self):
+        self.stop_flag = True
+        self.thread.join()
+
+    def _run(self):
+        while not self.stop_flag:
+            logging.info("Running scheduled process")
+            self.process_function(None, trigger_type="scheduled")
+
+            # Sleep until next interval, but check stop_flag every minute
+            for _ in range(self.interval_hours * 60):
+                if self.stop_flag:
+                    break
+                time.sleep(60)
+
+
+class FileSystemMonitor:
+    def __init__(self, path_to_watch, process_function):
+        self.path_to_watch = path_to_watch
+        self.process_function = process_function
+        self.observer = Observer()
+        self.scheduler = ScheduledProcessor(process_function)
+
+    def start(self):
+        """Start monitoring the specified directory and scheduled processing"""
         try:
-            self.monitor = DirectoryMonitor(self.watch_path, self.host, self.port, self.remote_dir)
-            observer = Observer()
-            observer.schedule(self.monitor, self.watch_path, recursive=False)
-            observer.start()
-            
-            while True:
-                time.sleep(1)
-                
+            path = Path(self.path_to_watch).resolve()
+            if not path.exists():
+                raise FileNotFoundError(f"Directory not found: {path}")
+
+            # Start the file system observer
+            event_handler = ChangeHandler(self.process_function)
+            self.observer.schedule(event_handler, str(path), recursive=False)
+            self.observer.start()
+            logging.info(f"Started monitoring directory: {path}")
+
+            # Start the scheduled processor
+            self.scheduler.start()
+            logging.info("Started scheduled processor (2-hour interval)")
+
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                self.cleanup()
+
         except Exception as e:
-            logging.error(f"Daemon error: {str(e)}")
-            observer.stop()
-        finally:
-            observer.join()
+            logging.error(f"Error occurred: {str(e)}")
+            self.cleanup()
+            sys.exit(1)
 
-    def handle_signal(self, signo, stack_frame):
-        logging.info(f"Received signal {signo}")
-        sys.exit(0)
+    def cleanup(self):
+        """Clean up resources"""
+        self.observer.stop()
+        self.scheduler.stop()
+        self.observer.join()
+        logging.info("Monitoring stopped")
 
-def start_daemon(watch_path, host, port, remote_dir):
-    pid_file = '/var/run/ftpmonitor.pid'
-    log_file = '/var/log/ftpmonitor.log'
-    
-    # Configure daemon context
-    context = daemon.DaemonContext(
-        working_directory='/var/lib/ftpmonitor',
-        umask=0o002,
-        pidfile=lockfile.FileLock(pid_file),
-        files_preserve=[
-            logging.getLogger().handlers[0].stream,
-        ],
-    )
-    
-    # Initialize logging before daemonizing
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.INFO,
-        format='%(asctime)s - %(message)s'
-    )
 
-    logging.info("Starting FTP monitor daemon")
-    
-    # Start the daemon
-    with context:
-        daemon = DirectoryMonitorDaemon(watch_path, host, port, remote_dir, pid_file)
-        daemon.run()
+def example_process_function(file_path, trigger_type):
+    """Example function to be called when file changes are detected or on schedule"""
+    if trigger_type == "scheduled":
+        logging.info("Running scheduled process")
+        # Add your scheduled processing logic here
+        # For example, process all files in the directory:
+        for file in Path(WATCH_PATH).glob('*'):
+            if file.is_file():
+                logging.info(f"Processing file (scheduled): {file}")
+                # Your processing code here
+    else:  # trigger_type == "file_change"
+        logging.info(f"Processing file (change triggered): {file_path}")
+        # Add your file change processing logic here
+
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: python daemon_monitor.py <watch_path> <host> <port> <remote_dir>")
-        sys.exit(1)
-        
-    watch_path = sys.argv[1]
-    host = sys.argv[2]
-    port = sys.argv[3]
-    remote_dir = sys.argv[4]
-    
-    start_daemon(watch_path, host, port, remote_dir)
+    # Replace with your directory path
+    WATCH_PATH = "/path/to/your/directory"
+
+    # Create and start the monitor
+    monitor = FileSystemMonitor(WATCH_PATH, example_process_function)
+    monitor.start()
