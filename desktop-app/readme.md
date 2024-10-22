@@ -5,6 +5,20 @@
 
 Ventus is a cross-platform desktop application designed to facilitate easy and secure file transfers within a local network. It leverages a custom network protocol and a user-friendly interface to streamline the process of sharing files between devices.
 
+## Screenshots
+
+**Connect Screen:**
+
+![Connect Screen](https://github.com/<your-username>/<your-repo-name>/blob/main/desktop-app/screenshots/connect_screen.png)
+
+**Home Screen (Active Network):**
+
+![Home Screen](https://github.com/<your-username>/<your-repo-name>/blob/main/desktop-app/screenshots/home_screen.png)
+
+**Settings Screen:**
+
+![Settings Screen](https://github.com/<your-username>/<your-repo-name>/blob/main/desktop-app/screenshots/settings_screen.png)
+
 ## Features
 
 * **Easy Network Creation:** Start a new file-sharing network with a single click.
