@@ -1,2 +1,0 @@
-sync-ftp-server/target/** linguist-language=Rust
-async-ftp-server/target/** linguist-language=Rust
