@@ -14,14 +14,13 @@ export default function Home() {
     <ImageBackground source={bgImg} resizeMode="cover" style={styles.container}>
       <TitleBar icons={["back", "settings"]} />
       <Text style={styles.title}>Sync</Text>
-      <Card py={20} mt={20}>
+      <Card py={25} pb={25} px={30} mt={10}>
         <Chart />
         {/* <CustomPieChart /> */}
         {/* <Arc /> */}
         <HorizontalLine />
         <Text style={styles.text}>192.168.124.20:1234</Text>
       </Card>
-      <Card></Card>
     </ImageBackground>
     // </View>
   );
@@ -34,8 +33,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#dadada",
-    fontSize: 30,
+    fontSize: 25,
     marginTop: 10,
+    fontFamily: "MMedium",
   },
   text: {
     color: "#dadada",

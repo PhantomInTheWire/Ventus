@@ -5,8 +5,10 @@ interface Props {
   children?: React.ReactNode;
   mt?: number;
   flexDirection?: "row" | "column";
+  items?: "";
   px?: number;
   py?: number;
+  pb?: number;
 }
 
 export default function Card(props: Props) {
@@ -17,8 +19,10 @@ export default function Card(props: Props) {
         ...styles.bg,
         marginTop: props.mt ?? 0,
         flexDirection: props.flexDirection ?? "column",
+        // alignItems:
         paddingHorizontal: props.px ?? 0,
         paddingVertical: props.py ?? 0,
+        paddingBottom: props.pb ?? 0,
       }}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -32,8 +36,9 @@ const styles = StyleSheet.create({
   container: {},
   bg: {
     alignItems: "center",
-    borderRightWidth: 2,
-    borderBottomWidth: 2,
+    borderWidth: 2,
+    // borderRightWidth: 2,
+    // borderBottomWidth: 2,
     borderColor: "#ffffff0A",
     borderRadius: 16,
   },

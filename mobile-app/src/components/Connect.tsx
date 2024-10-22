@@ -23,10 +23,10 @@ export default function Connect() {
     >
       <TitleBar />
 
-      <Text className="text-2xl text-[#dadada]" style={styles.title}>
+      <Text className="text-[#dadada]" style={styles.title}>
         Connect
       </Text>
-      <Card mt={20} py={30}>
+      <Card mt={10} py={25} pb={25}>
         <CustomButton
           onPress={navigateToHome}
           active={true}
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     color: "#dadada",
     fontSize: 25,
     marginTop: 10,
-    fontFamily: "MSemiBold",
-    fontWeight: 700,
+    fontFamily: "MMedium",
+    // fontWeight: 700,
   },
 });
