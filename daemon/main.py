@@ -8,6 +8,7 @@ def foo(host, port, dir):
   """
   print("Change detected! calling sync function")
   os.system(f"../android-bin/target/debug/android-bin sync --host {host} --port {port} --local-dir {dir} --remote-dir files")
+  time.sleep(5)
 
 def watch_directory(path, host, port):
   """
