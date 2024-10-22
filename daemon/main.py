@@ -7,7 +7,7 @@ def foo(host, port, dir):
   This function will be called whenever a change is detected in the watched directory.
   """
   print("Change detected! calling sync function")
-  os.system(f"../cli/interface/main.py --host {host} --port {port} --local-dir {dir} --remote-dir files sync")
+  os.system(f"../android-bin/target/debug/android-bin sync --host {host} --port {port} --local-dir {dir} --remote-dir files")
 
 def watch_directory(path, host, port):
   """
@@ -24,8 +24,8 @@ def watch_directory(path, host, port):
     before = after
 
 if __name__ == "__main__":
-  if len(sys.argv) != 5:
-    print("Usage: python script.py <directory_path> <host> <port>")
+  if len(sys.argv) != 4:
+    print("Usage: python main.py <directory_path> <host> <port>")
     sys.exit(1)
 
   directory_path = sys.argv[1]
@@ -44,13 +44,13 @@ if __name__ == "__main__":
   # Become a session leader and detach from the controlling terminal
   os.setsid()
   os.umask(0)
-  # Redirect standard file descriptors to /dev/null
+  # Redirect standard file descriptors to a file
   sys.stdin.flush()
   sys.stdout.flush()
   sys.stderr.flush()
   si = open(os.devnull, 'r')
-  so = open(os.devnull, 'a+')
-  se = open(os.devnull, 'a+')
+  so = open("daemon_output.txt", 'a+')  # Redirect stdout to daemon_output.txt
+  se = open("daemon_error.txt", 'a+')  # Redirect stderr to daemon_error.txt
   os.dup2(si.fileno(), sys.stdin.fileno())
   os.dup2(so.fileno(), sys.stdout.fileno())
   os.dup2(se.fileno(), sys.stderr.fileno())
