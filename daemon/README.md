@@ -1,199 +1,235 @@
-# FTP Directory Monitor Documentation
+# File System Monitor Daemon
 
 ## Overview
-The FTP Directory Monitor is a daemon process that watches specified directories for changes and automatically syncs them with a remote FTP server using a custom FTP client.
+This daemon provides a robust file system monitoring solution with scheduled processing capabilities. It combines real-time file system monitoring with scheduled execution, making it ideal for automated file processing workflows.
 
-## Components
-- Directory Monitor Daemon (`ftpmonitor_daemon.py`)
-- Custom FTP Client (`ftp_client.py`)
-- System Service Files (Linux/Windows/macOS)
+## Features
+- Real-time monitoring of file system changes (create, modify, delete)
+- Scheduled processing at 2-hour intervals
+- Comprehensive logging system
+- Graceful error handling and shutdown
+- Cross-platform compatibility
+- Configurable monitoring paths and processing logic
+- Systemd service integration (Linux)
 
-## Requirements
-- Python 3.6+
-- Required packages:
-  ```bash
-  pip install watchdog python-daemon
-  ```
-- Running instance of custom FTP server
-- Root/sudo access for daemon operations
+## Prerequisites
+- Python 3.7 or higher
+- pip (Python package manager)
+- Administrative privileges (for system service setup)
 
 ## Installation
 
-1. Clone the repository:
+1. Clone or download the project to your desired location:
 ```bash
-git clone <repository_url>
-cd <project_directory>
+git clone <repository-url>
+cd filesystem-monitor-daemon
 ```
 
-2. Install dependencies:
+2. Create and activate a virtual environment (recommended):
 ```bash
-pip install watchdog python-daemon
+# On Windows
+python -m venv venv
+venv\Scripts\activate
+
+# On Linux/MacOS
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-3. Set up system service (choose based on OS):
-
-### Linux (systemd)
-1. Create service file:
+3. Install required dependencies:
 ```bash
-sudo nano /etc/systemd/system/ftpmonitor.service
+pip install -r requirements.txt
 ```
 
-2. Add configuration:
+## Configuration
+
+### Basic Configuration
+Edit the following variables in `daemon_script.py`:
+
+```python
+WATCH_PATH = "/path/to/your/directory"  # Directory to monitor
+```
+
+### Advanced Configuration Options
+The daemon can be customized by modifying these parameters:
+
+1. Logging Configuration:
+```python
+logging.basicConfig(
+    level=logging.INFO,  # Can be changed to DEBUG for more verbose logging
+    format='%(asctime)s - %(message)s',
+    handlers=[
+        logging.FileHandler('filesystem_monitor.log'),
+        logging.StreamHandler()
+    ]
+)
+```
+
+2. Scheduler Interval:
+```python
+scheduler = ScheduledProcessor(process_function, interval_hours=2)  # Modify interval_hours as needed
+```
+
+## Usage
+
+### Running as a Python Script
+
+1. Start the daemon:
+```bash
+python daemon_script.py
+```
+
+2. Stop the daemon:
+- Press `Ctrl+C` for graceful shutdown
+- The daemon will properly clean up resources and stop all monitoring threads
+
+### Running as a System Service (Linux)
+
+1. Create a systemd service file:
+```bash
+sudo nano /etc/systemd/system/file-monitor.service
+```
+
+2. Add the following configuration:
 ```ini
 [Unit]
-Description=FTP Directory Monitor Service
+Description=File System Monitor Daemon
 After=network.target
 
 [Service]
 Type=simple
-User=YOUR_USERNAME
-ExecStart=/usr/bin/python3 /path/to/monitor.py /path/to/watch host port /remote/dir
+User=your_username
+ExecStart=/usr/bin/python3 /full/path/to/daemon_script.py
 Restart=always
 RestartSec=10
+WorkingDirectory=/full/path/to/daemon/directory
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-3. Enable and start service:
+3. Enable and start the service:
 ```bash
-sudo systemctl enable ftpmonitor
-sudo systemctl start ftpmonitor
+sudo systemctl enable file-monitor
+sudo systemctl start file-monitor
 ```
 
-### Windows
-1. Create batch file:
-```batch
-@echo off
-python "C:\path\to\monitor.py" "C:\path\to\watch" host port /remote/dir
-```
-
-2. Place in startup folder (`shell:startup`)
-
-### macOS
-1. Create launch agent:
+4. Service management commands:
 ```bash
-nano ~/Library/LaunchAgents/com.user.ftpmonitor.plist
+# Check status
+sudo systemctl status file-monitor
+
+# Stop service
+sudo systemctl stop file-monitor
+
+# Restart service
+sudo systemctl restart file-monitor
+
+# View logs
+sudo journalctl -u file-monitor
 ```
 
-2. Add configuration:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.user.ftpmonitor</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/bin/python3</string>
-        <string>/path/to/monitor.py</string>
-        <string>/path/to/watch</string>
-        <string>host</string>
-        <string>port</string>
-        <string>/remote/dir</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-</dict>
-</plist>
+## Customizing Process Function
+
+The `example_process_function` can be customized to handle files according to your needs:
+
+```python
+def example_process_function(file_path, trigger_type):
+    if trigger_type == "scheduled":
+        # Add scheduled processing logic
+        pass
+    else:  # trigger_type == "file_change"
+        # Add file change processing logic
+        pass
 ```
 
-3. Load launch agent:
-```bash
-launchctl load ~/Library/LaunchAgents/com.user.ftpmonitor.plist
+### Example Custom Implementation:
+```python
+def example_process_function(file_path, trigger_type):
+    if trigger_type == "scheduled":
+        logging.info("Running scheduled batch processing")
+        for file in Path(WATCH_PATH).glob('*.txt'):
+            process_file(file)
+    else:
+        logging.info(f"Processing changed file: {file_path}")
+        process_file(Path(file_path))
+
+def process_file(file_path):
+    # Add your file processing logic here
+    pass
 ```
 
-## Usage
+## Logging
 
-### Manual Start
-```bash
-sudo python3 ftpmonitor_daemon.py /path/to/watch host port /remote/dir
-```
+The daemon maintains two types of logs:
+1. Console output
+2. File log (`filesystem_monitor.log`)
 
-### Check Status
-```bash
-# Check process
-ps aux | grep ftpmonitor
+Log entries include:
+- Timestamp
+- Event type (file creation, modification, deletion, scheduled run)
+- File paths
+- Error messages and stack traces
+- Service start/stop notifications
 
-# View PID
-cat /var/run/ftpmonitor.pid
+## Error Handling
 
-# Check logs
-tail -f /var/log/ftpmonitor.log
-```
-
-### Stop Daemon
-```bash
-sudo kill $(cat /var/run/ftpmonitor.pid)
-```
-
-## Features
-- Real-time directory monitoring
-- Automatic file synchronization
-- System startup integration
-- Logging to `/var/log/ftpmonitor.log`
-- PID management via `/var/run/ftpmonitor.pid`
-- Signal handling (SIGTERM, SIGHUP)
-- Cooldown period between syncs (5 seconds)
-
-## Configuration
-
-### Logging
-- Location: `/var/log/ftpmonitor.log`
-- Format: `timestamp - message`
-- Level: INFO
-
-### Daemon Settings
-- Working Directory: `/var/lib/ftpmonitor`
-- PID File: `/var/run/ftpmonitor.pid`
-- Umask: 0o002
+The daemon includes comprehensive error handling:
+- File system errors
+- Permission issues
+- Invalid paths
+- Processing errors
+- Resource cleanup on shutdown
 
 ## Troubleshooting
 
-### Common Issues
+Common issues and solutions:
+
 1. Permission Denied
-   - Solution: Run with sudo/root permissions
-   
-2. Port in Use
-   - Solution: Check if another instance is running
-   
-3. Cannot Create PID File
-   - Solution: Ensure /var/run is writable
-
-### Debug Steps
-1. Check logs:
 ```bash
-tail -f /var/log/ftpmonitor.log
+sudo chown -R your_username:your_group /path/to/watch
+chmod 755 /path/to/watch
 ```
 
-2. Verify process:
-```bash
-ps aux | grep ftpmonitor
-```
+2. Service Won't Start
+- Check logs: `sudo journalctl -u file-monitor`
+- Verify paths in service file
+- Ensure Python environment is accessible
 
-3. Check file permissions:
-```bash
-ls -l /var/run/ftpmonitor.pid
-ls -l /var/log/ftpmonitor.log
-```
+3. High CPU Usage
+- Increase scheduling interval
+- Optimize processing function
+- Reduce monitoring scope
 
-## Error Handling
-- Failed syncs are logged and retried on next file change
-- Daemon automatically restarts on crash (when using system service)
-- Graceful shutdown on SIGTERM/SIGHUP signals
+4. Memory Leaks
+- Implement proper resource cleanup in processing function
+- Monitor memory usage
+- Restart service periodically if needed
 
-## Limitations
-- No recursive directory monitoring
-- Basic file comparison (filename only)
-- Fixed 5-second cooldown between syncs
-- Requires root/sudo access
+## Contributing
 
-## Future Improvements
-- Add configuration file support
-- Implement recursive directory monitoring
-- Add checksum-based file comparison
-- Add user-configurable sync cooldown
-- Implement retry mechanism for failed syncs
+1. Fork the repository
+2. Create a feature branch
+3. Commit changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+[Specify your license here]
+
+## Support
+[Specify support contact information]
+
+## Changelog
+
+### Version 1.0.0
+- Initial release
+- File system monitoring
+- Scheduled processing
+- Systemd service support
+
+## Security Considerations
+- Runs with limited user privileges
+- No external network access required
+- File permissions should be properly configured
+- Logging contains no sensitive information
