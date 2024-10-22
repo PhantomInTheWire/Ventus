@@ -1,2 +1,10 @@
 .venv/
 .venv/*
+target/
+target/*
+files/ftest
+files/ftest/*
+files/womp_womp
+files/womp_womp/*
+files/tello.txt
+sample2.pdf

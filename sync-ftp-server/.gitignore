@@ -3,3 +3,8 @@ target/
 .idea/*
 sample.pdf
 __pycache__/
+files/test
+files/test/*
+files/alsoTest
+files/alsoTest/*
+files/hello.txt
