@@ -44,7 +44,8 @@
     "react-native-svg": "15.2.0",
     "react-native-ui-lib": "^7.32.0",
     "react-native-web": "~0.19.10",
-    "zustand": "^5.0.0"
+    "zustand": "^5.0.0",
+    "expo-camera": "~15.0.16"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -8,7 +8,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
+// import { useColorScheme } from "@/hooks/useColorScheme";
 
 import "./index.css";
 
@@ -16,7 +16,7 @@ import "./index.css";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  // const colorScheme = useColorScheme();
   const [loaded, error] = useFonts({
     MRegular: require("../assets/fonts/Montserrat-Regular.ttf"),
     MMedium: require("../assets/fonts/Montserrat-Medium.ttf"),

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ImageBackground, StyleSheet, Text, TextInput } from "react-native";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import TitleBar from "./TitleBar";
 import { Card, CustomButton, HorizontalLine } from "./ui";
 import { InputIcon, QrScanIcon, LinkIcon } from "@/icons";
@@ -11,12 +11,12 @@ const bgImage = require("@/assets/images/bg.png");
 export default function Connect() {
   const [textInput, setTextInput] = useState<string>("");
   const router = useRouter();
-  const navigateToHome = () => {
-    router.push("/home");
+  const navigateToScan = () => {
+    router.push("/scan");
   };
 
   const connect = useAuthStore((state) => state.connect);
-  const disconnect = useAuthStore((state) => state.disconnect);
+  // const disconnect = useAuthStore((state) => state.disconnect);
   const connectToNetwork = () => {
     connect(textInput);
     router.replace("./home");
@@ -37,7 +37,7 @@ export default function Connect() {
       </Text>
       <Card mt={10} py={25} pb={25}>
         <CustomButton
-          onPress={navigateToHome}
+          onPress={navigateToScan}
           active={true}
           icon={<QrScanIcon />}
         >
