@@ -6,11 +6,14 @@ use std::str::FromStr;
 use clap::{App, Arg, SubCommand};
 use colored::*;
 use std::io::BufReader;
+use std::time::Duration;
 
 struct FtpClient {
     ftp_host: String,
     ftp_port: u16,
     timeout: std::time::Duration,
+    max_retries: u32,
+    retry_delay: Duration,
 }
 
 impl FtpClient {
@@ -19,6 +22,8 @@ impl FtpClient {
             ftp_host,
             ftp_port,
             timeout: std::time::Duration::from_secs(10),
+            max_retries: 3,
+            retry_delay: Duration::from_millis(500),
         }
     }
 
@@ -35,31 +40,72 @@ impl FtpClient {
     }
 
     fn connect(&self) -> std::io::Result<TcpStream> {
-        self.print_colored(
-            &format!("Connecting to {}:{}", self.ftp_host, self.ftp_port),
-            "purple",
-        );
+        for attempt in 0..self.max_retries {
+            self.print_colored(
+                &format!(
+                    "Connecting to {}:{} (attempt {}/{})",
+                    self.ftp_host, self.ftp_port, attempt + 1, self.max_retries
+                ),
+                "purple",
+            );
 
-        let mut stream = TcpStream::connect((&*self.ftp_host, self.ftp_port))?;
-        stream.set_read_timeout(Some(self.timeout))?;
-        stream.set_write_timeout(Some(self.timeout))?;
+            match TcpStream::connect((&*self.ftp_host, self.ftp_port)) {
+                Ok(mut stream) => {
+                    stream.set_read_timeout(Some(self.timeout))?;
+                    stream.set_write_timeout(Some(self.timeout))?;
 
-        let mut response = [0u8; 1024];
-        let n = stream.read(&mut response)?;
-        let response_str = String::from_utf8_lossy(&response[..n]);
-        self.print_colored(&format!("Response: {}", response_str), "cyan");
+                    let mut response = [0u8; 1024];
+                    let n = stream.read(&mut response)?;
+                    let response_str = String::from_utf8_lossy(&response[..n]);
+                    self.print_colored(&format!("Response: {}", response_str), "cyan");
 
-        if !response_str.contains("220") {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Invalid FTP welcome message",
-            ));
+                    if !response_str.contains("220") {
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            "Invalid FTP welcome message",
+                        ));
+                    }
+
+                    return Ok(stream);
+                }
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("Connection failed: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
         }
 
-        Ok(stream)
+        unreachable!()
     }
 
     fn login(&self, stream: &mut TcpStream, user: &str) -> std::io::Result<()> {
+        for attempt in 0..self.max_retries {
+            match self.attempt_login(stream, user) {
+                Ok(_) => return Ok(()),
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("Login failed: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+        unreachable!()
+    }
+
+    fn attempt_login(&self, stream: &mut TcpStream, user: &str) -> std::io::Result<()> {
         let command = format!("USER {}\r\n", user);
         stream.write_all(command.as_bytes())?;
 
@@ -79,6 +125,27 @@ impl FtpClient {
     }
 
     fn pasv_mode(&self, stream: &mut TcpStream) -> std::io::Result<(String, u16)> {
+        for attempt in 0..self.max_retries {
+            match self.attempt_pasv_mode(stream) {
+                Ok(result) => return Ok(result),
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("PASV mode failed: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        unreachable!()
+    }
+
+    fn attempt_pasv_mode(&self, stream: &mut TcpStream) -> std::io::Result<(String, u16)> {
         stream.write_all(b"PASV\r\n")?;
 
         let mut response = [0u8; 1024];
@@ -93,7 +160,7 @@ impl FtpClient {
             ));
         }
 
-        // Parse PASV response
+        // Parse PASV response (same as before)
         let start = response_str.find('(').unwrap() + 1;
         let end = response_str.find(')').unwrap();
         let pasv_info: Vec<u8> = response_str[start..end]
@@ -116,6 +183,26 @@ impl FtpClient {
             return Ok(());
         }
 
+        for attempt in 0..self.max_retries {
+            match self.attempt_upload_file(filename) {
+                Ok(_) => return Ok(()),
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("Upload failed: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+        unreachable!()
+    }
+
+    fn attempt_upload_file(&self, filename: &str) -> std::io::Result<()> {
         let mut control_stream = self.connect()?;
         self.login(&mut control_stream, "testuser")?;
         let (data_host, data_port) = self.pasv_mode(&mut control_stream)?;
@@ -141,7 +228,9 @@ impl FtpClient {
 
         loop {
             let n = file.read(&mut buffer)?;
-            if n == 0 { break; }
+            if n == 0 {
+                break;
+            }
             data_stream.write_all(&buffer[..n])?;
         }
 
@@ -159,11 +248,43 @@ impl FtpClient {
     }
 
     fn download_file(&self, filename: &str) -> std::io::Result<()> {
+        for attempt in 0..self.max_retries {
+            match self.attempt_download_file(filename) {
+                Ok(_) => return Ok(()),
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("Download failed: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        unreachable!()
+    }
+
+    fn attempt_download_file(&self, filename: &str) -> std::io::Result<()> {
         let mut control_stream = self.connect()?;
         self.login(&mut control_stream, "testuser")?;
         let (data_host, data_port) = self.pasv_mode(&mut control_stream)?;
 
-        let mut data_stream = TcpStream::connect((data_host, data_port)).expect("Failed to connect");
+        let mut data_stream = loop {
+            match TcpStream::connect((data_host.clone(), data_port)) { // Clone data_host
+                Ok(stream) => break stream,
+                Err(e) => {
+                    self.print_colored(
+                        &format!("Failed to connect to data port: {}. Retrying...", e),
+                        "yellow",
+                    );
+                    std::thread::sleep(self.retry_delay);
+                }
+            }
+        };
 
         let command = format!("RETR {}\r\n", filename);
         control_stream.write_all(command.as_bytes())?;
@@ -184,10 +305,11 @@ impl FtpClient {
 
         loop {
             let n = data_stream.read(&mut buffer)?;
-            if n == 0 { break; }
+            if n == 0 {
+                break;
+            }
             file.write_all(&buffer[..n])?;
         }
-
 
         let mut response = [0u8; 1024];
         let n = control_stream.read(&mut response)?;
@@ -207,6 +329,27 @@ impl FtpClient {
             "purple",
         );
 
+        for attempt in 0..self.max_retries {
+            match self.attempt_sync(local_dir, remote_dir) {
+                Ok(_) => return Ok(()),
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("Sync failed: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        unreachable!()
+    }
+
+    fn attempt_sync(&self, local_dir: &str, remote_dir: &str) -> std::io::Result<()> {
         self.sync_local_to_remote(local_dir, remote_dir)?;
         self.sync_remote_to_local(local_dir, remote_dir)?;
 
@@ -226,8 +369,7 @@ impl FtpClient {
                 self.print_colored(
                     &format!(
                         "Syncing directory {:?} to {:?}",
-                        local_path,
-                        remote_path
+                        local_path, remote_path
                     ),
                     "purple",
                 );
@@ -239,8 +381,7 @@ impl FtpClient {
                 self.print_colored(
                     &format!(
                         "Uploading file {:?} to {:?}",
-                        local_path,
-                        remote_path
+                        local_path, remote_path
                     ),
                     "purple",
                 );
@@ -263,8 +404,7 @@ impl FtpClient {
             self.print_colored(
                 &format!(
                     "Downloading file {:?} to {:?}",
-                    remote_path,
-                    local_path
+                    remote_path, local_path
                 ),
                 "purple",
             );
@@ -280,8 +420,7 @@ impl FtpClient {
             self.print_colored(
                 &format!(
                     "Syncing remote directory {:?} to local {:?}",
-                    remote_subdir,
-                    local_subdir
+                    remote_subdir, local_subdir
                 ),
                 "purple",
             );
@@ -301,6 +440,27 @@ impl FtpClient {
             "purple",
         );
 
+        for attempt in 0..self.max_retries {
+            match self.attempt_make_remote_dir(remote_dir) {
+                Ok(_) => return Ok(()),
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("Failed to make remote directory: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        unreachable!()
+    }
+
+    fn attempt_make_remote_dir(&self, remote_dir: &str) -> std::io::Result<()> {
         let mut stream = self.connect()?;
         self.login(&mut stream, "testuser")?;
 
@@ -335,6 +495,28 @@ impl FtpClient {
             "purple",
         );
 
+        for attempt in 0..self.max_retries {
+            match self.attempt_list_files(remote_dir) {
+                Ok(result) => return Ok(result),
+                Err(e) => {
+                    if attempt < self.max_retries - 1 {
+                        self.print_colored(
+                            &format!("Failed to list files: {}. Retrying...", e),
+                            "yellow",
+                        );
+                        std::thread::sleep(self.retry_delay);
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        unreachable!()
+    }
+
+
+    fn attempt_list_files(&self, remote_dir: &str) -> std::io::Result<(Vec<String>, Vec<String>)> {
         let mut control_stream = self.connect()?;
         self.login(&mut control_stream, "testuser")?;
 
@@ -355,8 +537,6 @@ impl FtpClient {
         drop(control_stream);
         let response_str = String::from_utf8_lossy(&response[..n]);
         self.print_colored(&format!("Response after LIST: {}", response_str), "yellow");
-
-
 
         println!("Directory listing received");
 
@@ -384,120 +564,135 @@ impl FtpClient {
 }
 
 fn main() {
-    let matches = App::new("FTP Client")
-        .version("1.0")
-        .author("Your Name")
-        .about("FTP Client for testing and syncing")
-        .subcommand(
-            SubCommand::with_name("upload")
-                .about("Upload a file")
-                .arg(Arg::with_name("file").required(true))
-                .arg(
-                    Arg::with_name("host")
-                        .long("host")
-                        .required(true)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("port")
-                        .long("port")
-                        .required(true)
-                        .takes_value(true),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("download")
-                .about("Download a file")
-                .arg(Arg::with_name("file").required(true))
-                .arg(
-                    Arg::with_name("host")
-                        .long("host")
-                        .required(true)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("port")
-                        .long("port")
-                        .required(true)
-                        .takes_value(true),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("sync")
-                .about("Sync directories")
-                .arg(
-                    Arg::with_name("local-dir")
-                        .long("local-dir")
-                        .required(true)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("remote-dir")
-                        .long("remote-dir")
-                        .required(true)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("host")
-                        .long("host")
-                        .required(true)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("port")
-                        .long("port")
-                        .required(true)
-                        .takes_value(true),
-                ),
-        )
-        .get_matches();
+    loop {
+        let matches = clap::App::new("FTP Client")
+            .version("1.0")
+            .author("Your Name")
+            .about("FTP Client for testing and syncing")
+            .subcommand(
+                clap::SubCommand::with_name("upload")
+                    .about("Upload a file")
+                    .arg(clap::Arg::with_name("file").required(true))
+                    .arg(
+                        clap::Arg::with_name("host")
+                            .long("host")
+                            .required(true)
+                            .takes_value(true),
+                    )
+                    .arg(
+                        clap::Arg::with_name("port")
+                            .long("port")
+                            .required(true)
+                            .takes_value(true),
+                    ),
+            )
+            .subcommand(
+                clap::SubCommand::with_name("download")
+                    .about("Download a file")
+                    .arg(clap::Arg::with_name("file").required(true))
+                    .arg(
+                        clap::Arg::with_name("host")
+                            .long("host")
+                            .required(true)
+                            .takes_value(true),
+                    )
+                    .arg(
+                        clap::Arg::with_name("port")
+                            .long("port")
+                            .required(true)
+                            .takes_value(true),
+                    ),
+            )
+            .subcommand(
+                clap::SubCommand::with_name("sync")
+                    .about("Sync directories")
+                    .arg(
+                        clap::Arg::with_name("local-dir")
+                            .long("local-dir")
+                            .required(true)
+                            .takes_value(true),
+                    )
+                    .arg(
+                        clap::Arg::with_name("remote-dir")
+                            .long("remote-dir")
+                            .required(true)
+                            .takes_value(true),
+                    )
+                    .arg(
+                        clap::Arg::with_name("host")
+                            .long("host")
+                            .required(true)
+                            .takes_value(true),
+                    )
+                    .arg(
+                        clap::Arg::with_name("port")
+                            .long("port")
+                            .required(true)
+                            .takes_value(true),
+                    ),
+            )
+            .get_matches();
 
-    match matches.subcommand() {
-        ("upload", Some(upload_matches)) => {
-            let host = upload_matches.value_of("host").unwrap();
-            let port = upload_matches
-                .value_of("port")
-                .unwrap()
-                .parse::<u16>()
-                .expect("Invalid port number");
-            let file = upload_matches.value_of("file").unwrap();
+        let mut success = true;
 
-            let ftp_client = FtpClient::new(host.to_string(), port);
-            if let Err(e) = ftp_client.upload_file(file) {
-                eprintln!("Error uploading file: {}", e);
+        match matches.subcommand() {
+            ("upload", Some(upload_matches)) => {
+                let host = upload_matches.value_of("host").unwrap();
+                let port = upload_matches
+                    .value_of("port")
+                    .unwrap()
+                    .parse::<u16>()
+                    .expect("Invalid port number");
+                let file = upload_matches.value_of("file").unwrap();
+
+                let ftp_client = FtpClient::new(host.to_string(), port);
+                if let Err(e) = ftp_client.upload_file(file) {
+                    eprintln!("Error uploading file: {}", e);
+                    success = false;
+                }
+            }
+            ("download", Some(download_matches)) => {
+                let host = download_matches.value_of("host").unwrap();
+                let port = download_matches
+                    .value_of("port")
+                    .unwrap()
+                    .parse::<u16>()
+                    .expect("Invalid port number");
+                let file = download_matches.value_of("file").unwrap();
+
+                let ftp_client = FtpClient::new(host.to_string(), port);
+                if let Err(e) = ftp_client.download_file(file) {
+                    eprintln!("Error downloading file: {}", e);
+                    success = false;
+                }
+            }
+            ("sync", Some(sync_matches)) => {
+                let host = sync_matches.value_of("host").unwrap();
+                let port = sync_matches
+                    .value_of("port")
+                    .unwrap()
+                    .parse::<u16>()
+                    .expect("Invalid port number");
+                let local_dir = sync_matches.value_of("local-dir").unwrap();
+                let remote_dir = sync_matches.value_of("remote-dir").unwrap();
+
+                let ftp_client = FtpClient::new(host.to_string(), port);
+                if let Err(e) = ftp_client.sync(local_dir, remote_dir) {
+                    eprintln!("Error syncing directories: {}", e);
+                    success = false;
+                }
+            }
+            _ => {
+                println!("Invalid command. Use --help for usage information.");
+                success = false;
             }
         }
-        ("download", Some(download_matches)) => {
-            let host = download_matches.value_of("host").unwrap();
-            let port = download_matches
-                .value_of("port")
-                .unwrap()
-                .parse::<u16>()
-                .expect("Invalid port number");
-            let file = download_matches.value_of("file").unwrap();
 
-            let ftp_client = FtpClient::new(host.to_string(), port);
-            if let Err(e) = ftp_client.download_file(file) {
-                eprintln!("Error downloading file: {}", e);
-            }
-        }
-        ("sync", Some(sync_matches)) => {
-            let host = sync_matches.value_of("host").unwrap();
-            let port = sync_matches
-                .value_of("port")
-                .unwrap()
-                .parse::<u16>()
-                .expect("Invalid port number");
-            let local_dir = sync_matches.value_of("local-dir").unwrap();
-            let remote_dir = sync_matches.value_of("remote-dir").unwrap();
-
-            let ftp_client = FtpClient::new(host.to_string(), port);
-            if let Err(e) = ftp_client.sync(local_dir, remote_dir) {
-                eprintln!("Error syncing directories: {}", e);
-            }
-        }
-        _ => {
-            println!("Invalid command. Use --help for usage information.");
+        if success {
+            break;
+        } else {
+            println!("Operation failed. Restarting in 5 seconds...");
+            std::thread::sleep(std::time::Duration::from_secs(1));
         }
     }
 }
