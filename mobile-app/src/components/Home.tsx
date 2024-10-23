@@ -1,17 +1,22 @@
+import { useEffect } from "react";
 import {
   ImageBackground,
   StyleSheet,
   Text,
   ActivityIndicator,
 } from "react-native";
+// import * as FileSystem from 'expo-file-system';
 import TitleBar from "./TitleBar";
 import { Card, HorizontalLine } from "./ui";
 import useAuthStore from "@/store/auth";
+import FileAccess from "@/app/files";
 
 const bgImg = require("@/assets/images/bg.png");
 
 export default function Home() {
   const port = useAuthStore((state) => state.port);
+  // FileAccess
+
   return (
     <ImageBackground source={bgImg} resizeMode="cover" style={styles.container}>
       <TitleBar icons={["settings"]} justify="flex-end" />

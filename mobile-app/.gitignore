@@ -12,3 +12,9 @@ web-build/
 
 # macOS
 .DS_Store
+
+# Other files
+androidBin.md
+
+# src/components/Files2.tsx
+# src/components/Files.tsx

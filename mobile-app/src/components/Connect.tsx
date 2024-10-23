@@ -70,6 +70,9 @@ export default function Connect() {
           />
         </Card>
       </Card>
+      <Link href={"./files"} style={{ ...styles.title }}>
+        Files
+      </Link>
     </ImageBackground>
   );
 }

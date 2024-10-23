@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Card } from "./";
+import Card from "./Card";
 
 interface Props {
   active?: boolean;
