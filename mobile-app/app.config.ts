@@ -7,10 +7,10 @@ const config: ExpoConfig = {
   scheme: "io.ventus.mobile",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/icon.png",
+  icon: "./src/assets/images/icon.png",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/images/bg.png",
+    image: "./src/assets/images/bg.png",
     resizeMode: "contain",
     backgroundColor: "#1A1D21",
   },
@@ -19,7 +19,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
+      foregroundImage: "./src/assets/images/adaptive-icon.png",
       backgroundColor: "#1A1D21",
     },
     package: "io.ventus.mobile", // Add or modify this line
@@ -27,7 +27,7 @@ const config: ExpoConfig = {
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/favicon.png",
+    favicon: "./src/assets/images/favicon.png",
   },
   plugins: [
     "expo-router",
