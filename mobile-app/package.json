@@ -40,6 +40,7 @@
     "react-native-css-interop": "^0.0.0-20240828112338",
     "react-native-gesture-handler": "~2.16.1",
     "react-native-gifted-charts": "^1.4.44",
+    "react-native-permissions": "^5.0.1",
     "react-native-pie-chart": "^3.0.2",
     "react-native-progress": "^5.0.1",
     "react-native-reanimated": "~3.10.1",

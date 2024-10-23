@@ -22,7 +22,13 @@ const config: ExpoConfig = {
       foregroundImage: "./src/assets/images/adaptive-icon.png",
       backgroundColor: "#1A1D21",
     },
-    package: "io.ventus.mobile", // Add or modify this line
+    package: "io.ventus.mobile",
+    permissions: [
+      "INTERNET",
+      "ACCESS_NETWORK_STATE",
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE",
+    ],
   },
   web: {
     bundler: "metro",

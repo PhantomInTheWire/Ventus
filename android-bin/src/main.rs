@@ -3,7 +3,6 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
 use std::str::FromStr;
-use clap::{App, Arg, SubCommand};
 use colored::*;
 use std::io::BufReader;
 use std::time::Duration;
