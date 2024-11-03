@@ -5,6 +5,7 @@ mod client;
 mod command;
 mod utils;
 use std::process::Command;
+use std::string::ToString;
 
 fn main() {
     let ascii = r#"
@@ -49,7 +50,7 @@ fn main() {
     
     
    
-    let listener = TcpListener::bind(format!("0.0.0.0:1234"))
+    let listener = TcpListener::bind("0.0.0.0:1234".to_string())
         .expect("Couldn't bind this address...");
     let output = Command::new("./artifact/release")
         .output()

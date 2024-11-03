@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+service FileSyncService {
+  rpc StartSync(ClientRequest) returns (SyncResponse);
+  rpc SyncComplete(ClientRequest) returns (SyncResponse);
+  rpc NotifySync(Notification) returns (SyncResponse);
+}
+
+message ClientRequest {
+  string client_id = 1;
+}
+
+message Notification {
+  string message = 1;
+  string origin_client_id = 2;
+}
+
+message SyncResponse {
+  string status = 1;
+}
+
