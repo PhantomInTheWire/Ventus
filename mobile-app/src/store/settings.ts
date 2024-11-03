@@ -1,17 +1,17 @@
 import { create } from "zustand";
 
-export type Settings = {
+export interface Settings {
   deviceName: string;
   targetFolder: string;
   maxConn: number;
   maxRate: number;
   sizeLimit: number;
-};
+}
 
-type SettingsStore = {
+interface SettingsStore {
   settings: Settings;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
-};
+}
 
 const useSettingsStore = create<SettingsStore>((set) => ({
   settings: {

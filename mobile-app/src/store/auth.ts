@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
-type AuthStore = {
+interface AuthStore {
   isConnected: boolean;
   port: string | null;
   connect: (newPort: string) => void;
   disconnect: () => void;
-};
+}
 
 const useAuthStore = create<AuthStore>((set) => ({
   isConnected: false,
