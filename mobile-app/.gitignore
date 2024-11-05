@@ -24,3 +24,13 @@ androidBin.md
 
 expo-env.d.ts
 # @end expo-cli
+
+# extra files
+copy_files.py
+
+# Native modules
+android/
+ios/
+
+# Rust module
+native_rust_lib/

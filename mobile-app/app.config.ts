@@ -16,6 +16,7 @@ const config: ExpoConfig = {
   },
   ios: {
     supportsTablet: true,
+    bundleIdentifier: "io.ventus.mobile",
   },
   android: {
     adaptiveIcon: {
