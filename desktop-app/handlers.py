@@ -20,7 +20,7 @@ class NetworkHandlers:
             return False
         
         try:
-            system(f"python ../cli/interface/main.py --host {code_input} --port 1234 --local-dir {folder_path} --remote-dir files sync")
+            system(f"./artifact sync --host {code_input} --port 1234 --local-dir {folder_path} --remote-dir files")
             self.is_connected = True
             return True
         except subprocess.CalledProcessError as e:
