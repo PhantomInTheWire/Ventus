@@ -20,9 +20,9 @@ impl FtpClient {
         FtpClient {
             ftp_host,
             ftp_port,
-            timeout: std::time::Duration::from_secs(10),
+            timeout: std::time::Duration::from_millis(250),
             max_retries: 3,
-            retry_delay: Duration::from_millis(500),
+            retry_delay: Duration::from_millis(250),
         }
     }
 
@@ -690,7 +690,7 @@ fn main() {
         if success {
             break;
         } else {
-            println!("Operation failed. Restarting in 5 seconds...");
+            println!("Operation failed. Restarting in 1 seconds...");
             std::thread::sleep(std::time::Duration::from_secs(1));
         }
     }
