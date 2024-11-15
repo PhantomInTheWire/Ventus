@@ -20,9 +20,9 @@ impl FtpClient {
         FtpClient {
             ftp_host,
             ftp_port,
-            timeout: std::time::Duration::from_millis(250),
+            timeout: std::time::Duration::from_millis(50),
             max_retries: 3,
-            retry_delay: Duration::from_millis(250),
+            retry_delay: Duration::from_millis(50),
         }
     }
 
