@@ -1,45 +1,25 @@
 import SwiftUI
+import AVFoundation
 
 struct HomeView: View {
     @State private var ipAddress: String = ""
-    @State private var folderName: String = "" // State for the folder name
+    @State private var folderName: String = ""
     @State private var showingSyncView = false
+    @State private var showingScanner = false // Controls QR scanner display
     
     private let gradientColors = [
-        Color(#colorLiteral(red: 0.2, green: 0.2, blue: 0.5, alpha: 1)), // Deep purple
-        Color(#colorLiteral(red: 0.1, green: 0.1, blue: 0.3, alpha: 1))  // Darker purple
+        Color(#colorLiteral(red: 0.2, green: 0.2, blue: 0.5, alpha: 1)),
+        Color(#colorLiteral(red: 0.1, green: 0.1, blue: 0.3, alpha: 1))
     ]
     
     var body: some View {
         NavigationView {
             ZStack {
                 AnimatedBackgroundView(gradientColors: gradientColors)
-                RadialGradient(
-                    gradient: Gradient(colors: gradientColors),
-                    center: .center,
-                    startRadius: 100,
-                    endRadius: 400
-                )
-                .ignoresSafeArea()
-                .overlay(
-                    GeometryReader { geometry in
-                        ForEach(0..<20) { _ in
-                            Circle()
-                                .fill(Color.white.opacity(0.1))
-                                .frame(width: CGFloat.random(in: 50...150))
-                                .position(
-                                    x: CGFloat.random(in: 0...geometry.size.width),
-                                    y: CGFloat.random(in: 0...geometry.size.height)
-                                )
-                                .blur(radius: 20)
-                        }
-                    }
-                )
                 
                 VStack(spacing: 30) {
                     Spacer()
                     
-                    // App icon
                     Image(systemName: "network")
                         .resizable()
                         .scaledToFit()
@@ -51,9 +31,7 @@ struct HomeView: View {
                                 endPoint: .bottom
                             )
                         )
-                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
                     
-                    // Title with gradient
                     Text("Ventus")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundStyle(
@@ -63,14 +41,12 @@ struct HomeView: View {
                                 endPoint: .trailing
                             )
                         )
-                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
                     
                     Text("Asynchronous FTP Sync")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
-                        .padding(.bottom, 10)
                     
-                    // IP input field
+                    // IP Address Input
                     HStack {
                         Image(systemName: "network")
                             .foregroundColor(.white.opacity(0.8))
@@ -79,18 +55,21 @@ struct HomeView: View {
                             .foregroundColor(.white.opacity(0.9))
                             .padding()
                             .keyboardType(.numbersAndPunctuation)
+                        
+                        Button(action: { showingScanner = true }) {
+                            Image(systemName: "qrcode.viewfinder")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 24))
+                        }
                     }
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 15)
                             .fill(Color.white.opacity(0.2))
-                            .blur(radius: 2)
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: -5, y: 5)
-                            .shadow(color: .white.opacity(0.2), radius: 10, x: 5, y: -5)
                     )
                     .padding(.horizontal)
                     
-                    // Folder name input field
+                    // Folder Name Input
                     HStack {
                         Image(systemName: "folder")
                             .foregroundColor(.white.opacity(0.8))
@@ -103,13 +82,10 @@ struct HomeView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 15)
                             .fill(Color.white.opacity(0.2))
-                            .blur(radius: 2)
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: -5, y: 5)
-                            .shadow(color: .white.opacity(0.2), radius: 10, x: 5, y: -5)
                     )
                     .padding(.horizontal)
                     
-                    // Connect button
+                    // Connect Button
                     NavigationLink(destination: SyncView(), isActive: $showingSyncView) {
                         Button(action: {
                             if isValidIP(ipAddress) && !folderName.isEmpty {
@@ -134,18 +110,22 @@ struct HomeView: View {
                             )
                             .foregroundColor(.white)
                             .cornerRadius(20)
-                            .shadow(color: Color.blue.opacity(0.5), radius: 10, x: 0, y: 5)
                         }
                     }
                     .disabled(!isValidIP(ipAddress) || folderName.isEmpty)
                     .padding(.horizontal)
-                    .padding(.top, 20)
                     
                     Spacer()
                 }
                 .padding(.top, 40)
             }
             .navigationBarHidden(true)
+            .sheet(isPresented: $showingScanner) {
+                QRCodeScannerView { scannedCode in
+                    showingScanner = false
+                    ipAddress = scannedCode // Update the IP field
+                }
+            }
         }
     }
     
