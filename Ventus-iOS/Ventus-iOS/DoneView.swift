@@ -1,14 +1,14 @@
 import SwiftUI
 
 struct DoneView: View {
-    @Environment(\.dismiss) private var dismiss
     @State private var isShowingContent = false
+    @State private var navigateToHome = false // State for navigation
 
     private let gradientColors = [
         Color(#colorLiteral(red: 0.2, green: 0.2, blue: 0.5, alpha: 1)),
         Color(#colorLiteral(red: 0.07843137255, green: 0.07843137255, blue: 0.2392156863, alpha: 1))
     ]
-    
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -26,9 +26,16 @@ struct DoneView: View {
 
                     StatsSection(isPortrait: true, geometry: UIScreen.main.bounds, isShowing: $isShowingContent)
 
-                    BackToHomeButton(navigateToHome: .constant(false))
+                    // Directly using the BackToHomeButton without the NavigationLink here
+                    BackToHomeButton(navigateToHome: $navigateToHome) // Pass binding
                         .padding(.horizontal, 40)
                         .padding(.top, 20)
+                        .background(
+                            NavigationLink(destination: HomeView(), isActive: $navigateToHome) {
+                                EmptyView()
+                            }
+                            .hidden()
+                        )
                 }
                 .padding()
                 .offset(y: isShowingContent ? 0 : UIScreen.main.bounds.height * 0.3) // Start from below
@@ -76,11 +83,6 @@ struct SuccessIcon: View {
                 }
                 withAnimation(.easeInOut(duration: 0.6)) {
                     opacity = 1.0
-                }
-
-                // Animation: Rotation
-                withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: true)) {
-                    rotation = 10 // Slight back-and-forth rotation
                 }
 
                 // Animation: Gradient
@@ -131,7 +133,7 @@ struct BackToHomeButton: View {
 
     var body: some View {
         Button(action: {
-            navigateToHome = true
+            navigateToHome = true // Trigger navigation
         }) {
             Text("Back to Home")
                 .font(.headline)
