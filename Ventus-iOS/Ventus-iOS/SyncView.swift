@@ -4,9 +4,10 @@ struct SyncView: View {
     @State private var progress: Float = 0.0
     @State private var rotation: Double = 0.0
     @State private var showingDoneView = false
-    @State private var particles: [(offset: CGSize, scale: CGFloat)] = (0..<12).map { _ in
-        (CGSize(width: .random(in: -100...100), height: .random(in: -100...100)),
-         CGFloat.random(in: 0.2...0.7))
+    @State private var particles: [(offset: CGSize, scale: CGFloat, angle: Double)] = (0..<30).map { _ in
+        (CGSize(width: .random(in: -150...150), height: .random(in: -150...150)),
+         CGFloat.random(in: 0.2...0.7),
+         .random(in: 0...360))
     }
     
     private let gradientColors = [
@@ -24,20 +25,29 @@ struct SyncView: View {
                 // Particle system
                 ForEach(0..<particles.count, id: \.self) { index in
                     Circle()
-                        .fill(.white.opacity(0.3))
+                        .fill(.white.opacity(0.5))
                         .frame(width: 4, height: 4)
                         .scaleEffect(particles[index].scale)
                         .offset(particles[index].offset)
-                        .blur(radius: 2)
+                        .rotationEffect(.degrees(particles[index].angle))
+                        .blur(radius: 1)
                         .onAppear {
+                            let duration = Double.random(in: 2...4)
+                            let distance = sqrt(pow(particles[index].offset.width, 2) +
+                                                pow(particles[index].offset.height, 2))
+                            let endOffset = CGSize(width: particles[index].offset.width * 0.2,
+                                                   height: particles[index].offset.height * 0.2)
                             withAnimation(
-                                .easeInOut(duration: Double.random(in: 2...4))
-                                .repeatForever(autoreverses: true)
+                                Animation.easeInOut(duration: duration)
+                                    .repeatForever(autoreverses: false)
                             ) {
-                                particles[index].offset = CGSize(
-                                    width: .random(in: -150...150),
-                                    height: .random(in: -150...150)
-                                )
+                                particles[index].offset = endOffset
+                            }
+                            withAnimation(
+                                Animation.linear(duration: duration)
+                                    .repeatForever(autoreverses: false)
+                            ) {
+                                particles[index].angle += distance > 0 ? 360 : 0
                             }
                         }
                 }
