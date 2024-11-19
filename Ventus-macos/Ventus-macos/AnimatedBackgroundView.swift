@@ -1,26 +1,20 @@
-//
-//  AnimatedBackgroundView.swift
-//  Ventus-macos
-//
-//  Created by Karan Haresh Lokchandani on 18/11/24.
-//
-
-
 import SwiftUI
 
 struct AnimatedBackgroundView: View {
     let gradientColors: [Color]
     
-    // Increased number of particles for larger desktop screens
-    @State private var particles: [(offset: CGSize, scale: CGFloat, opacity: CGFloat)] = (0..<8).map { _ in
+    // Increased number of particles and wider initial distribution
+    @State private var particles: [(offset: CGSize, scale: CGFloat, opacity: CGFloat)] = (0..<12).map { _ in
         (
-            CGSize(width: .random(in: -150...150), height: .random(in: -150...150)),
-            CGFloat.random(in: 0.6...1.2),
+            CGSize(
+                width: .random(in: -250...250),
+                height: .random(in: -250...250)
+            ),
+            CGFloat.random(in: 0.6...1.4),
             CGFloat.random(in: 0.1...0.2)
         )
     }
     
-    // Add hover state for interactive effects
     @State private var isHovered = false
     
     var body: some View {
@@ -30,7 +24,7 @@ struct AnimatedBackgroundView: View {
                 LinearGradient(colors: gradientColors, startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
                 
-                // Subtle Particle system
+                // Enhanced Particle system
                 ForEach(0..<particles.count, id: \.self) { index in
                     Circle()
                         .fill(.white.opacity(particles[index].opacity))
@@ -39,35 +33,40 @@ struct AnimatedBackgroundView: View {
                         .offset(particles[index].offset)
                         .blur(radius: 10)
                         .onAppear {
-                            // Create smooth, continuous animation
-                            let baseAnimation = Animation
-                                .easeInOut(duration: Double.random(in: 4...7))
-                                .repeatForever(autoreverses: true)
+                            // Randomize animation timing for more natural movement
+                            let animationDelay = Double.random(in: 0...2)
                             
-                            // Animate position
-                            withAnimation(baseAnimation) {
-                                particles[index].offset = CGSize(
-                                    width: .random(in: -geometry.size.width/4...geometry.size.width/4),
-                                    height: .random(in: -geometry.size.height/4...geometry.size.height/4)
-                                )
-                            }
-                            
-                            // Animate scale
-                            withAnimation(
-                                Animation
-                                    .easeInOut(duration: Double.random(in: 3...5))
+                            DispatchQueue.main.asyncAfter(deadline: .now() + animationDelay) {
+                                // Create wider movement range based on screen size
+                                let baseAnimation = Animation
+                                    .easeInOut(duration: Double.random(in: 6...10))
                                     .repeatForever(autoreverses: true)
-                            ) {
-                                particles[index].scale = CGFloat.random(in: 0.8...1.4)
-                            }
-                            
-                            // Animate opacity
-                            withAnimation(
-                                Animation
-                                    .easeInOut(duration: Double.random(in: 2...4))
-                                    .repeatForever(autoreverses: true)
-                            ) {
-                                particles[index].opacity = CGFloat.random(in: 0.08...0.15)
+                                
+                                // Animate position with wider range
+                                withAnimation(baseAnimation) {
+                                    particles[index].offset = CGSize(
+                                        width: .random(in: -geometry.size.width/2...geometry.size.width/2),
+                                        height: .random(in: -geometry.size.height/2...geometry.size.height/2)
+                                    )
+                                }
+                                
+                                // Slower scale animation for smoother effect
+                                withAnimation(
+                                    Animation
+                                        .easeInOut(duration: Double.random(in: 4...7))
+                                        .repeatForever(autoreverses: true)
+                                ) {
+                                    particles[index].scale = CGFloat.random(in: 0.7...1.6)
+                                }
+                                
+                                // Subtle opacity changes
+                                withAnimation(
+                                    Animation
+                                        .easeInOut(duration: Double.random(in: 3...5))
+                                        .repeatForever(autoreverses: true)
+                                ) {
+                                    particles[index].opacity = CGFloat.random(in: 0.06...0.18)
+                                }
                             }
                         }
                 }
@@ -83,8 +82,5 @@ struct AnimatedBackgroundView: View {
 
 // Preview
 #Preview {
-    AnimatedBackgroundView(gradientColors: [
-        Color(#colorLiteral(red: 0.2, green: 0.2, blue: 0.5, alpha: 1)),
-        Color(#colorLiteral(red: 0.07843137255, green: 0.07843137255, blue: 0.2392156863, alpha: 1))
-    ])
+    AnimatedBackgroundView(gradientColors: [Color.blue, Color.indigo])
 }
