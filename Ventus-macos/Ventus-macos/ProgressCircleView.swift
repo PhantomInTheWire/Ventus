@@ -142,3 +142,7 @@ struct ProgressCircleView: View {
         .shadow(color: .blue.opacity(0.3), radius: 5)
     }
 }
+
+#Preview {
+    ProgressCircleView(viewModel: SyncViewModel(), size: 550)
+}

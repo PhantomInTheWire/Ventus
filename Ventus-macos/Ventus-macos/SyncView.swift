@@ -9,7 +9,7 @@ struct SyncView: View {
             ZStack {
                 GeometryReader { geometry in
                     ZStack {
-                        BackgroundView(colors: SyncViewStyle.gradientColors)
+                    BackgroundView(colors: SyncViewStyle.gradientColors)
                         
                         ForEach(viewModel.particles) { particle in
                             ParticleView(particle: particle)
@@ -41,14 +41,17 @@ struct SyncView: View {
                         navigateToDoneView = true  // Set navigation flag to true once loading is complete
                     }
                 }
-                
-                // Conditional NavigationLink based on `navigateToDoneView` state
-                NavigationLink(
-                    destination: DoneView(),
-                    isActive: $navigateToDoneView
-                ) {
-                    EmptyView()  // EmptyView to allow navigation without visual element
+            }
+            .onChange(of: viewModel.isLoadingComplete) {
+                isComplete in
+                if isComplete {
+                    navigateToDoneView = true
                 }
+            }
+
+            // Use navigationDestination to handle the transition:
+            .navigationDestination(isPresented: $navigateToDoneView) {
+                DoneView()
             }
         }
     }
