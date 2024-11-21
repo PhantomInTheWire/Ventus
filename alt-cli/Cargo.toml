@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = "2.33"
-colored = "^2.0"
+clap = "^2.34.0"
+colored = "^2.1.0"

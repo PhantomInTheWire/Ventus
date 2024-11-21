@@ -10,7 +10,7 @@ use std::time::Duration;
 struct FtpClient {
     ftp_host: String,
     ftp_port: u16,
-    timeout: std::time::Duration,
+    timeout: Duration,
     max_retries: u32,
     retry_delay: Duration,
 }
@@ -20,7 +20,7 @@ impl FtpClient {
         FtpClient {
             ftp_host,
             ftp_port,
-            timeout: std::time::Duration::from_millis(50),
+            timeout: Duration::from_millis(50),
             max_retries: 3,
             retry_delay: Duration::from_millis(50),
         }
@@ -691,7 +691,7 @@ fn main() {
             break;
         } else {
             println!("Operation failed. Restarting in 1 seconds...");
-            std::thread::sleep(std::time::Duration::from_secs(1));
+            std::thread::sleep(Duration::from_secs(1));
         }
     }
 }
