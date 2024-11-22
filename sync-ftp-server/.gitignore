@@ -8,4 +8,5 @@ files/test/*
 files/alsoTest
 files/alsoTest/*
 files/hello.txt
-artifact/*
+artifact/release
+artifact
