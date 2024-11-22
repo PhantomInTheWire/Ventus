@@ -1,0 +1,18 @@
+[package]
+name = "ffi"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+uniffi = { workspace = true, features=["scaffolding-ffi-buffer-fns"] }
+colored = "2.1.0"
+
+[build-dependencies]
+# Add the "scaffolding-ffi-buffer-fns" feature to make sure things can build correctly
+uniffi = { workspace = true, features = ["build", "scaffolding-ffi-buffer-fns"] }
+
+[dev-dependencies]
+uniffi = { workspace = true, features = ["bindgen-tests"] }
+
+[features]
+ffi-trace = ["uniffi/ffi-trace"]

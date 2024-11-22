@@ -1,0 +1,4 @@
+[bindings.kotlin]
+package_name = "org.mozilla.uniffi.example.ffi"
+[bindings.swift]
+package_name = "org.karan.uniffi.example.ffi"
