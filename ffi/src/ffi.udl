@@ -1,4 +1,0 @@
-namespace ffi {
-    u64 add(u64 a, u64 b);
-    boolean apple_sync(string host, u16 port, string local_dir, string remote_dir);
-};

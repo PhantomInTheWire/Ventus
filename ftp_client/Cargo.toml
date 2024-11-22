@@ -1,0 +1,19 @@
+[package]
+name = "ftp_client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+colored = "2.1.0"
+uniffi = { version = "0.28.3", features = ["build", "cli", "scaffolding-ffi-buffer-fns"] }
+
+[build-dependencies]
+uniffi = { version = "0.28.3", features = [ "build", "scaffolding-ffi-buffer-fns"] }
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+name = "ftp_client"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"

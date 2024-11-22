@@ -7,6 +7,7 @@ use colored::*;
 use std::io::BufReader;
 use std::time::Duration;
 
+#[derive(unifii:Enum)]
 pub struct FtpClient {
     ftp_host: String,
     ftp_port: u16,

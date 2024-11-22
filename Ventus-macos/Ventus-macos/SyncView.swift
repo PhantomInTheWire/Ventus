@@ -38,7 +38,7 @@ struct SyncView: View {
                 }
                 .onChange(of: viewModel.isLoadingComplete) { isComplete in
                     if isComplete {
-                        navigateToDoneView = true  // Set navigation flag to true once loading is complete
+                        navigateToDoneView = true
                     }
                 }
             }
