@@ -20,9 +20,9 @@ impl FtpClient {
         FtpClient {
             ftp_host,
             ftp_port,
-            timeout: Duration::from_millis(50),
+            timeout: Duration::from_millis(500),
             max_retries: 3,
-            retry_delay: Duration::from_millis(50),
+            retry_delay: Duration::from_millis(300),
         }
     }
 
