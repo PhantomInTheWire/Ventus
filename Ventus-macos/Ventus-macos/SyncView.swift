@@ -5,7 +5,7 @@ struct SyncView: View {
     @State private var navigateToDoneView = false  // State to control navigation
     
     var body: some View {
-        NavigationStack {  // Wrapping the view in a NavigationStack for navigation support
+        NavigationStack {
             ZStack {
                 GeometryReader { geometry in
                     ZStack {

@@ -2,7 +2,7 @@ use std::io::{Read, Write};
 use std::str::FromStr;
 use colored::*;
 use std::time::Duration;
-mod lib;
+mod client;
 
 fn main() {
     loop {
@@ -86,7 +86,7 @@ fn main() {
                     .expect("Invalid port number");
                 let file = upload_matches.value_of("file").unwrap();
 
-                let ftp_client = lib::FtpClient::new(host.to_string(), port);
+                let ftp_client = client::FtpClient::new(host.to_string(), port);
                 if let Err(e) = ftp_client.upload_file(file) {
                     eprintln!("Error uploading file: {}", e);
                     success = false;
@@ -101,7 +101,7 @@ fn main() {
                     .expect("Invalid port number");
                 let file = download_matches.value_of("file").unwrap();
 
-                let ftp_client = lib::FtpClient::new(host.to_string(), port);
+                let ftp_client = client::FtpClient::new(host.to_string(), port);
                 if let Err(e) = ftp_client.download_file(file) {
                     eprintln!("Error downloading file: {}", e);
                     success = false;
@@ -117,7 +117,7 @@ fn main() {
                 let local_dir = sync_matches.value_of("local-dir").unwrap();
                 let remote_dir = sync_matches.value_of("remote-dir").unwrap();
 
-                let ftp_client = lib::FtpClient::new(host.to_string(), port);
+                let ftp_client = client::FtpClient::new(host.to_string(), port);
                 if let Err(e) = ftp_client.sync(local_dir, remote_dir) {
                     eprintln!("Error syncing directories: {}", e);
                     success = false;

@@ -68,7 +68,6 @@ struct SyncView: View {
                     
                     // Main progress circle
                     ZStack {
-                        // Outer glow
                         Circle()
                             .fill(
                                 RadialGradient(
@@ -81,7 +80,6 @@ struct SyncView: View {
                             .frame(width: geometry.size.width * 0.7)
                             .blur(radius: 20)
                         
-                        // Pulse effect rings
                         ForEach(0..<3) { index in
                             Circle()
                                 .stroke(
