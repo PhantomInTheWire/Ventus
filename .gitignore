@@ -3,5 +3,5 @@
 assets/Thumbnail.svg
 assets/Thumbnail2.png
 backend/
-
+.DS_Store
 sync-ftp-server/artifact/release
