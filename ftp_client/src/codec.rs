@@ -6,8 +6,8 @@ use std::str::FromStr;
 use colored::*;
 use std::io::BufReader;
 use std::time::Duration;
+use std::collections::HashMap;
 
-#[derive(unifii:Enum)]
 pub struct FtpClient {
     ftp_host: String,
     ftp_port: u16,
@@ -21,9 +21,9 @@ impl FtpClient {
         FtpClient {
             ftp_host,
             ftp_port,
-            timeout: Duration::from_millis(50),
+            timeout: Duration::from_millis(500),
             max_retries: 3,
-            retry_delay: Duration::from_millis(50),
+            retry_delay: Duration::from_millis(300),
         }
     }
 
@@ -359,11 +359,18 @@ impl FtpClient {
 
     fn sync_local_to_remote(&self, local_dir: &str, remote_dir: &str) -> std::io::Result<()> {
         self.make_remote_dir(remote_dir)?;
+        
+        // Get remote files and their sizes first
+        let (remote_files, remote_dirs) = self.list_files(remote_dir)?;
+        let remote_file_map: HashMap<String, u64> = remote_files
+            .into_iter()
+            .collect();
 
         for entry in fs::read_dir(local_dir)? {
             let entry = entry?;
             let local_path = entry.path();
-            let remote_path = Path::new(remote_dir).join(entry.file_name());
+            let file_name = entry.file_name();
+            let remote_path = Path::new(remote_dir).join(&file_name);
 
             if local_path.is_dir() {
                 self.print_colored(
@@ -378,6 +385,23 @@ impl FtpClient {
                     remote_path.to_str().unwrap(),
                 )?;
             } else {
+                // Check if file exists remotely with same size
+                if let Ok(local_metadata) = entry.metadata() {
+                    let local_size = local_metadata.len();
+                    if let Some(&remote_size) = remote_file_map.get(&file_name.to_string_lossy().to_string()) {
+                        if local_size == remote_size {
+                            self.print_colored(
+                                &format!(
+                                    "Skipping file {:?} (already exists remotely with same size)",
+                                    file_name
+                                ),
+                                "cyan",
+                            );
+                            continue;
+                        }
+                    }
+                }
+
                 self.print_colored(
                     &format!(
                         "Uploading file {:?} to {:?}",
@@ -397,9 +421,25 @@ impl FtpClient {
 
         let (files, dirs) = self.list_files(remote_dir)?;
 
-        for file in files {
+        for (file, size) in files {
             let local_path = Path::new(local_dir).join(&file);
             let remote_path = Path::new(remote_dir).join(&file);
+
+            // Skip if file exists locally with same size
+            if local_path.exists() {
+                if let Ok(metadata) = fs::metadata(&local_path) {
+                    if metadata.len() == size {
+                        self.print_colored(
+                            &format!(
+                                "Skipping file {:?} (already exists with same size)",
+                                file
+                            ),
+                            "cyan",
+                        );
+                        continue;
+                    }
+                }
+            }
 
             self.print_colored(
                 &format!(
@@ -489,7 +529,7 @@ impl FtpClient {
         Ok(())
     }
 
-    fn list_files(&self, remote_dir: &str) -> std::io::Result<(Vec<String>, Vec<String>)> {
+    fn list_files(&self, remote_dir: &str) -> std::io::Result<(Vec<(String, u64)>, Vec<String>)> {
         self.print_colored(
             &format!("Listing files in remote directory: {}", remote_dir),
             "purple",
@@ -515,8 +555,7 @@ impl FtpClient {
         unreachable!()
     }
 
-
-    fn attempt_list_files(&self, remote_dir: &str) -> std::io::Result<(Vec<String>, Vec<String>)> {
+    fn attempt_list_files(&self, remote_dir: &str) -> std::io::Result<(Vec<(String, u64)>, Vec<String>)> {
         let mut control_stream = self.connect()?;
         self.login(&mut control_stream, "testuser")?;
 
@@ -552,7 +591,11 @@ impl FtpClient {
             let parts: Vec<&str> = line.split('\t').collect();
             if parts.len() == 3 {
                 match parts[0] {
-                    "FILE" => files.push(parts[2].to_string()),
+                    "FILE" => {
+                        if let Ok(size) = parts[1].parse::<u64>() {
+                            files.push((parts[2].to_string(), size));
+                        }
+                    },
                     "DIR" => dirs.push(parts[2].to_string()),
                     _ => {}
                 }
