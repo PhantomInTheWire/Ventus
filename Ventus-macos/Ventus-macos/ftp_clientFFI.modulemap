@@ -1,0 +1,4 @@
+module ftp_clientFFI {
+    header "ftp_clientFFI.h"
+    export *
+}
