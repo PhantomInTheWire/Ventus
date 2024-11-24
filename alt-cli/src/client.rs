@@ -7,6 +7,7 @@ use colored::*;
 use std::io::BufReader;
 use std::time::Duration;
 use std::collections::HashMap;
+use shellexpand::tilde;
 
 pub struct FtpClient {
     ftp_host: String,
@@ -15,7 +16,7 @@ pub struct FtpClient {
     max_retries: u32,
     retry_delay: Duration,
 }
-
+ 
 impl FtpClient {
     pub fn new(ftp_host: String, ftp_port: u16) -> Self {
         FtpClient {
@@ -417,12 +418,14 @@ impl FtpClient {
     }
 
     fn sync_remote_to_local(&self, local_dir: &str, remote_dir: &str) -> std::io::Result<()> {
-        fs::create_dir_all(local_dir)?;
+        // Expand the local directory path
+        let expanded_local_dir = tilde(local_dir).into_owned();
+        fs::create_dir_all(&expanded_local_dir)?;
 
         let (files, dirs) = self.list_files(remote_dir)?;
 
         for (file, size) in files {
-            let local_path = Path::new(local_dir).join(&file);
+            let local_path = Path::new(&expanded_local_dir).join(&file);
             let remote_path = Path::new(remote_dir).join(&file);
 
             // Skip if file exists locally with same size
@@ -448,11 +451,13 @@ impl FtpClient {
                 ),
                 "purple",
             );
-            self.download_file(remote_path.to_str().unwrap())?;
+            // Create the file with the full expanded path
+            let mut file = File::create(&local_path)?;
+            self.download_to_file(remote_path.to_str().unwrap(), &mut file)?;
         }
 
         for dir in dirs {
-            let local_subdir = Path::new(local_dir).join(&dir);
+            let local_subdir = Path::new(&expanded_local_dir).join(&dir);
             let remote_subdir = Path::new(remote_dir).join(&dir);
 
             fs::create_dir_all(&local_subdir)?;
@@ -471,6 +476,59 @@ impl FtpClient {
             )?;
         }
 
+        Ok(())
+    }
+
+    // New helper function to download directly to a file
+    fn download_to_file(&self, remote_path: &str, file: &mut File) -> std::io::Result<()> {
+        let mut control_stream = self.connect()?;
+        self.login(&mut control_stream, "testuser")?;
+        let (data_host, data_port) = self.pasv_mode(&mut control_stream)?;
+
+        let mut data_stream = loop {
+            match TcpStream::connect((data_host.clone(), data_port)) {
+                Ok(stream) => break stream,
+                Err(e) => {
+                    self.print_colored(
+                        &format!("Failed to connect to data port: {}. Retrying...", e),
+                        "yellow",
+                    );
+                    std::thread::sleep(self.retry_delay);
+                }
+            }
+        };
+
+        let command = format!("RETR {}\r\n", remote_path);
+        control_stream.write_all(command.as_bytes())?;
+
+        let mut response = [0u8; 1024];
+        let n = control_stream.read(&mut response)?;
+        let response_str = String::from_utf8_lossy(&response[..n]);
+
+        if !response_str.contains("150") {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Failed to initiate file download",
+            ));
+        }
+
+        let mut buffer = [0; 4096];
+        loop {
+            let n = data_stream.read(&mut buffer)?;
+            if n == 0 {
+                break;
+            }
+            file.write_all(&buffer[..n])?;
+        }
+
+        let mut response = [0u8; 1024];
+        let n = control_stream.read(&mut response)?;
+        let response_str = String::from_utf8_lossy(&response[..n]);
+        self.print_colored(
+            &format!("Download completed: {}", response_str),
+            "blue",
+        );
+        
         Ok(())
     }
 

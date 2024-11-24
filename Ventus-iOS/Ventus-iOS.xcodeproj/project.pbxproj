@@ -6,8 +6,21 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E6ABC8C02CF278280020D918 /* libftp_client.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6ABC8B32CF275930020D918 /* libftp_client.a */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		E68FF23E2CE751D8009D27CD /* Ventus-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ventus-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E6ABC8832CF26C000020D918 /* libftp_client.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libftp_client.dylib; path = ../ftp_client/target/debug/libftp_client.dylib; sourceTree = "<group>"; };
+		E6ABC8B02CF26E3C0020D918 /* Ventus-iOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ventus-iOS-Bridging-Header.h"; sourceTree = "<group>"; };
+		E6ABC8B12CF275210020D918 /* libftp_client_universal.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libftp_client_universal.a; path = ../ftp_client/libftp_client_universal.a; sourceTree = "<group>"; };
+		E6ABC8B32CF275930020D918 /* libftp_client.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libftp_client.a; path = "../ftp_client/target/aarch64-apple-ios-sim/release/libftp_client.a"; sourceTree = "<group>"; };
+		E6ABC8B52CF275CE0020D918 /* libftp_client.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libftp_client.a; path = "../ftp_client/target/x86_64-apple-ios/release/libftp_client.a"; sourceTree = "<group>"; };
+		E6ABC8B82CF2769C0020D918 /* libftp_client_sim.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libftp_client_sim.a; path = ../ftp_client/libftp_client_sim.a; sourceTree = "<group>"; };
+		E6ABC8BA2CF276B70020D918 /* libftp_client.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libftp_client.a; path = "../ftp_client/target/aarch64-apple-ios-sim/debug/libftp_client.a"; sourceTree = "<group>"; };
+		E6ABC8BC2CF276DF0020D918 /* libftp_client.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libftp_client.dylib; path = "../ftp_client/target/aarch64-apple-ios-sim/release/libftp_client.dylib"; sourceTree = "<group>"; };
+		E6ABC8C12CF27D160020D918 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E6ABC8C02CF278280020D918 /* libftp_client.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,7 +46,10 @@
 		E68FF2352CE751D8009D27CD = {
 			isa = PBXGroup;
 			children = (
+				E6ABC8C12CF27D160020D918 /* Info.plist */,
+				E6ABC8B02CF26E3C0020D918 /* Ventus-iOS-Bridging-Header.h */,
 				E68FF2402CE751D8009D27CD /* Ventus-iOS */,
+				E6ABC8822CF26C000020D918 /* Frameworks */,
 				E68FF23F2CE751D8009D27CD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +60,20 @@
 				E68FF23E2CE751D8009D27CD /* Ventus-iOS.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E6ABC8822CF26C000020D918 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E6ABC8BC2CF276DF0020D918 /* libftp_client.dylib */,
+				E6ABC8BA2CF276B70020D918 /* libftp_client.a */,
+				E6ABC8B82CF2769C0020D918 /* libftp_client_sim.a */,
+				E6ABC8B32CF275930020D918 /* libftp_client.a */,
+				E6ABC8B52CF275CE0020D918 /* libftp_client.a */,
+				E6ABC8B12CF275210020D918 /* libftp_client_universal.a */,
+				E6ABC8832CF26C000020D918 /* libftp_client.dylib */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -252,8 +283,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Ventus-iOS/Preview Content\"";
+				DONT_GENERATE_INFOPLIST_FILE = YES;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				GENERATE_PKGINFO_FILE = NO;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Ventus;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -264,7 +299,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "/Users/ghost/Ventus/ftp_client/target/aarch64-apple-ios-sim/release";
 				MARKETING_VERSION = 1.0;
+				MODULEMAP_FILE = "$(SRCROOT)/ftp_clientFFI.modulemap\n";
 				PRODUCT_BUNDLE_IDENTIFIER = "name.karan.Ventus-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -272,6 +309,8 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Ventus-iOS-Bridging-Header.h";
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -285,8 +324,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Ventus-iOS/Preview Content\"";
+				DONT_GENERATE_INFOPLIST_FILE = YES;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				GENERATE_PKGINFO_FILE = NO;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Ventus;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -297,7 +340,9 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "/Users/ghost/Ventus/ftp_client/target/aarch64-apple-ios-sim/release";
 				MARKETING_VERSION = 1.0;
+				MODULEMAP_FILE = "$(SRCROOT)/ftp_clientFFI.modulemap\n";
 				PRODUCT_BUNDLE_IDENTIFIER = "name.karan.Ventus-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -305,6 +350,8 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Ventus-iOS-Bridging-Header.h";
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
