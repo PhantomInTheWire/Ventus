@@ -1,3 +1,0 @@
-namespace ftp_client {
-    boolean apple_sync(string host, u32 port, string local_dir, string remote_dir);
-};
