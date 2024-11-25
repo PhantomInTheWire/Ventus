@@ -41,9 +41,9 @@ struct SyncView: View {
                         if granted {
                             do {
                                 let x = try appleSync(
-                                    host: "192.168.1.2",
+                                    host: "192.168.143.26",
                                     port: 1234,
-                                    localDir: "files",  // Using relative path
+                                    localDir: "files/",  // Using relative path
                                     remoteDir: "files/"
                                 )
                             } catch {

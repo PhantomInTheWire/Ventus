@@ -11,8 +11,8 @@ uniffi = { version = "0.28.3", features = ["build", "cli", "scaffolding-ffi-buff
 uniffi = { version = "0.28.3", features = [ "build", "scaffolding-ffi-buffer-fns"] }
 
 [lib]
-crate-type = ["staticlib"] # for iOS
-#crate-type = ["cdylib"] # for macos
+#crate-type = ["staticlib"] # for iOS
+crate-type = ["cdylib"] # for macos
 name = "ftp_client"
 
 [[bin]]
