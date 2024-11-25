@@ -8,3 +8,4 @@ bytes = "1.7.2"
 futures = "^0.3.31"
 tokio =  {version = "^1.40.0", features = ["full", "net"] }
 tokio-util = { version = "^0.7.12", features = ["full", "codec"] }
+colored = "2.0.0"

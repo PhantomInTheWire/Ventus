@@ -17,9 +17,7 @@ impl Decoder for FtpCodec {
         if let Some(index) = find_crlf(buf) {
             let line = buf.split_to(index);
             buf.split_to(2); // Remove \r\n.
-            Command::new(line.to_vec())
-                .map(Some)
-                .map_err(Error::to_io_error)
+            Command::new(line.to_vec()).map(Some)
         } else {
             Ok(None)
         }
