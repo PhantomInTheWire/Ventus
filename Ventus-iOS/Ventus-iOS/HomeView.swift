@@ -147,7 +147,7 @@ struct HomeView: View {
                         
                         // Navigation to SyncView with Connect Button
                         NavigationLink(
-                            destination: SyncView(),
+                            destination: SyncView(ipAddress: ipAddress, localDir: folderName),
                             isActive: Binding(
                                 get: { isConnecting && connectionProgress >= 1.0 },
                                 set: { _ in }

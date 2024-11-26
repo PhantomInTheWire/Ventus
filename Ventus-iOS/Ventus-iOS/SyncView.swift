@@ -13,6 +13,8 @@ struct SyncView: View {
          CGFloat.random(in: 0.2...0.7),
          .random(in: 0...360))
     }
+    let ipAddress: String
+    let localDir: String
     
     private let gradientColors = [
         Color(#colorLiteral(red: 0.1568627451, green: 0.1568627451, blue: 0.4, alpha: 1)),
@@ -193,7 +195,7 @@ struct SyncView: View {
         }
         .onChange(of: selectedURL) { url in
             if url != nil {
-                startSync()
+                startSync(host: ipAddress)
             }
         }
         .onAppear {
@@ -203,9 +205,54 @@ struct SyncView: View {
         }
     }
     
-    private func startSync() {
+    func runSetup(filePath: String, host: String, completion: @escaping (String) -> Void) {
+        // Encode the query parameters
+        guard let encodedFilePath = filePath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let encodedHost = host.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            completion("Invalid input")
+            return
+        }
+        
+        // Construct the URL
+        let urlString = "http://localhost:8080/run-setup?file_path=\(encodedFilePath)&host=\(encodedHost)"
+        guard let url = URL(string: urlString) else {
+            completion("Invalid URL")
+            return
+        }
+        
+        // Create the GET request
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        // Perform the request
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    completion("Error: \(error.localizedDescription)")
+                }
+                return
+            }
+            
+            if let data = data, let responseText = String(data: data, encoding: .utf8) {
+                DispatchQueue.main.async {
+                    completion("Response: \(responseText)")
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion("No data received")
+                }
+            }
+        }.resume()
+    }
+
+    
+    private func startSync(host: String) {
         guard let url = selectedURL else { return }
-        appleSync(host: "192.168.1.3", port: 1234, localDir: url.path, remoteDir: "files")
+//        appleSync(host: host, port: 1234, localDir: url.path, remoteDir: "files")
+        runSetup(filePath: url.path, host: host) {
+            responseMessage in
+               print(responseMessage)
+        }
         simulateProgress()
     }
     
@@ -225,51 +272,4 @@ struct SyncView: View {
             }
         }
     }
-}
-struct DocumentPicker: UIViewControllerRepresentable {
-    @Binding var selectedURL: URL?
-    @Environment(\.presentationMode) private var presentationMode
-    
-    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        // Fixed initialization: asCopy set to false and using proper folder type
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder], asCopy: false)
-        picker.delegate = context.coordinator
-        picker.allowsMultipleSelection = false
-        picker.shouldShowFileExtensions = true
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, UIDocumentPickerDelegate {
-        let parent: DocumentPicker
-        
-        init(_ parent: DocumentPicker) {
-            self.parent = parent
-        }
-        
-        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            guard let url = urls.first else { return }
-            // Get security scoped access to the URL
-            let success = url.startAccessingSecurityScopedResource()
-            if success {
-                parent.selectedURL = url
-                // Note: Don't stop accessing the resource here as we need it for sync
-                // The app should call url.stopAccessingSecurityScopedResource() when done with the folder
-            }
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-        
-        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-    }
-}
-
-#Preview {
-    SyncView()
 }
