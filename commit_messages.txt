@@ -1,0 +1,165 @@
+Karan: more weird test files
+Karan: reorganizing stuff
+Karan: new stats for ishu-codes
+Karan: proper things organized
+Karan: reorganizing things
+Karan: async cli created and barely compiles
+Karan: async rust works
+Karan: desktop app no longer broken + more stats using git-of-theseus
+Karan: src cleanip
+Karan: web server executes remote commands, todo: connect to swiftui on ios
+Karan: something works
+Karan: Reapply "Remove ignored files from repository"
+Karan: Revert "Remove ignored files from repository"
+Karan: Remove ignored files from repository
+Karan: update .gitignore
+Karan: macos swift app syncs
+Karan: stats and cleanup updates
+Manveeranand: bi-directional sync is now truly bi-directional sync and not overwrite
+Manveeranand: update gitignore
+Karan: minor refractor and better testing
+Karan: .gitignore
+Karan: .gitignore
+Karan: minor refractor
+Karan: Revert "repobeats integration"
+Karan: repobeats integration
+Karan: uni ffi works
+Karan: build file for noobs
+Karan: uniffi bindings
+Karan: something noice
+Karan: ui glitch fix
+Ishu: retired legacy codebase
+Ishu: legacy codebase
+Karan: desktop app ui done
+Karan: better mobile ui for ios
+Karan: macos app first page
+Karan: better nav
+Karan: better ui/ux and animations
+Karan: qr code
+Karan: cleanup and giving users choice to selct folder(apple hates me)
+Karan: seems like it worked
+Karan: exp
+Karan: daemon just works, super fast btw
+Karan: made cli about 500% faster playing with timeouts and retrys rip: cpu
+Karan: made cli about 200% faster playing with timeouts and retrys rip: cpu
+Karan: ios app done
+Karan: rust cli in prod
+Ishu: Kotlin code integrated
+Ishu: Merge remote-tracking branch 'origin/main'
+Ishu: Auth test
+Karan: notification service for client and server partially implemented
+Karan: better testing and cleanup
+Karan: clean up
+Karan: handling warnings
+Ishu: better ignore
+Ishu: separation of concerns
+Ishu: qr code for server
+Ishu: Path corrected
+Ishu: Folder creating & Meta files modification
+Karan: 5 sec buffer daemon
+Karan: daemon rustified
+Karan: daemon please
+Karan: removal of util
+Karan: rust based cli tooling for native android support
+Karan: color support for async server
+Karan: old client handling(leagacy code support/ backwards compatability)
+Karan: daemon undaemonized
+Karan: Revert "added an attributes file"
+Karan: added an attributes file
+Karan: cleanup
+Manveeranand: desktop app better, pop up handled
+pawanmna: newfiles
+pawanmna: new files added
+pawanmna: more directories added
+Anika Garg: actix code
+Anika1406: update readme
+Anika1406: requirements.txt
+Anika Garg: daemon created
+Manveer Anand: Update readme.md
+Manveeranand: add screenshots dir within desktop app
+Manveer Anand: Update readme.md
+Manveeranand: add screenshots dir
+Manveeranand: fixed images
+Manveer Anand: Update readme.md
+Manveer Anand: Add files via upload
+pawanmna: recursive folder sync
+Manveer Anand: added the documentation
+Manveer Anand: Merge pull request #6 from PhantomInTheWire/seperation_of_concern_desktop_app
+Manveeranand: desktop-app oopified
+Ishu: UI improved
+Ishu: Scan feature implemented
+Ishu: Merge remote-tracking branch 'origin/main'
+Ishu: Cleanup
+Karan: color
+Ishu: Nav improved
+Ishu: Merge remote-tracking branch 'origin/main'
+Ishu: Settings page
+Manveeranand: old test clean up
+Manveeranand: clean up
+Karan: minor changes to stop code panic
+Manveeranand: probably works
+Karan: basic daemon
+Ishu: Merge remote-tracking branch 'origin/main'
+Ishu: Settings page added & titleBar icons updated
+Karan: reorganization of test files files
+Ishu: Merge remote-tracking branch 'origin/main'
+Ishu: Charts added
+Karan: update README
+Karan: sync happens
+Karan: cli interface basic implementation
+Karan: ascii compress?
+Ishu: Index -> Connect; Home -> Home | Mobile app
+Ishu: Connect card | Mobile-app
+Ishu: ConnectPage basic | Mobile-app
+Karan: finally on the local network
+Karan: local network server
+Karan: local network
+Manveeranand: Merge branch 'main' of https://github.com/PhantomInTheWire/Ventus into main
+PhantomInTheWire: Merge pull request #4 from PhantomInTheWire/async-ftp
+Karan: renaming of "backend" and addition of new async project
+Karan: final modularisation and old code preservation, new branch for async file transfer code
+Karan: additional list test for comparison
+Manveeranand: added settings menu
+Ishu: Requirements.txt file added | Desktop app
+Ishu: Methods added
+Ishu: Merge branch 'main' of https://github.com/PhantomInTheWire/Ventus
+Pawan Meena: Delete cli/tester.py
+Pawan Meena: Delete cli/script.py
+Pawan Meena: Delete cli/g_test.py
+Pawan Meena: Delete cli/f.py
+Pawan Meena: old files no use
+Pawan Meena: moving old file to this folder
+Pawan Meena: Add files via upload
+Ishu: Card modification
+PhantomInTheWire: Update README.md
+Karan: ppt
+Karan: purple ascii art added
+Pawan Meena: Add files via upload
+Pawan Meena: Merge pull request #3 from pawanmna/patch-2
+Pawan Meena: Add files via upload
+Pawan Meena: Update g_test.py
+Manveeranand: desktop app update
+Manveeranand: desktop app added
+Karan: pasv reimplementation III and upload download implementation + test coverage achieved
+Karan: pasv reimplementation
+Ishu: RNUI Lib added
+PhantomInTheWire: Merge pull request #2
+Karan: better documentation
+PhantomInTheWire: Merge pull request #1 from PhantomInTheWire/new_ideas
+PhantomInTheWire: Delete backend/.idea directory
+Karan: pasv command reimplemented?
+Karan: lots of new commands
+Karan: cli tests added
+Karan: some commands implemented
+Karan: not my problem
+Karan: not my problem
+Ishu: Non-modified changes
+Ishu: Gradient added in connect page
+Ishu: NativeWind added
+Karan: fix ishu-codes mistake
+Ishu: Thumbnail size decreased
+Ishu: Thumbnail added
+Ishu: Mobile app initialized
+Karan: folders
+Karan: folders
+PhantomInTheWire: Initial commit
