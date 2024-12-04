@@ -2,35 +2,35 @@
 # Git Repository Stats
 
 ## Total Commits
-- **Total number of commits:** 160
+- **Total number of commits:** 167
 
 ## Commits by Author
 | Author | Number of Commits | Percentage of Commits |
 |--------|-------------------:|-----------------------:|
-| <karanlokchandani@protonmail.com> | 79 | 49.38% |
-| <kumarishu494@gmail.com> | 35 | 21.88% |
-| <manveeranand88@gmail.com> | 14 | 8.75% |
-| Meena <137671836+pawanmna@users.noreply.github.com> | 11 | 6.88% |
-| Anand <128989083+ManveerAnand@users.noreply.github.com> | 6 | 3.75% |
-| <135950363+PhantomInTheWire@users.noreply.github.com> | 6 | 3.75% |
-| <pawanmeena200410@gmail.com> | 4 | 2.50% |
-| Garg <garganika1406@gmail.com> | 2 | 1.25% |
-| <anikagarg1406@gmail.com> | 2 | 1.25% |
-| <135950363+PhantomInTheWire@users.noreply.github.com> | 1 | 0.62% |
+| <karanlokchandani@protonmail.com> | 86 | 51.50% |
+| <kumarishu494@gmail.com> | 35 | 20.96% |
+| <manveeranand88@gmail.com> | 14 | 8.38% |
+| Meena <137671836+pawanmna@users.noreply.github.com> | 11 | 6.59% |
+| Anand <128989083+ManveerAnand@users.noreply.github.com> | 6 | 3.59% |
+| <135950363+PhantomInTheWire@users.noreply.github.com> | 6 | 3.59% |
+| <pawanmeena200410@gmail.com> | 4 | 2.40% |
+| Garg <garganika1406@gmail.com> | 2 | 1.20% |
+| <anikagarg1406@gmail.com> | 2 | 1.20% |
+| <135950363+PhantomInTheWire@users.noreply.github.com> | 1 | 0.60% |
 
 ## Lines of Code by Author
 | Author | Lines of Code | Percentage of Code |
 |--------|--------------:|-------------------:|
-| Karan | 9254 | 89.01% |
-| Manveeranand | 1118 | 10.75% |
-| Ishu | 37 | 0.36% |
+| Karan | 9306 | 89.05% |
+| Manveeranand | 1118 | 10.70% |
+| Ishu | 37 | 0.35% |
 
 ## Top 10 Most Changed Files
 | File | Number of Changes |
 |------|-------------------:|
-| 159 | 159 |
+| 166 | 166 |
+| Ventus-macos/Ventus-macos.xcodeproj/project.xcworkspace/xcuserdata/ghost.xcuserdatad/UserInterfaceState.xcuserstate | 18 |
 | Ventus-iOS/Ventus-iOS.xcodeproj/project.xcworkspace/xcuserdata/ghost.xcuserdatad/UserInterfaceState.xcuserstate | 17 |
-| Ventus-macos/Ventus-macos.xcodeproj/project.xcworkspace/xcuserdata/ghost.xcuserdatad/UserInterfaceState.xcuserstate | 15 |
 | mobile-app/package-lock.json | 14 |
 | backend/src/main.rs | 12 |
 | mobile-app/src/components/Home.tsx | 11 |
@@ -42,19 +42,20 @@
 ## File Type Summary
 | File Type | Number of Files |
 |-----------|----------------:|
-| .txt | 37 |
-| .swift | 32 |
+| .txt | 38 |
+| .swift | 33 |
 | .png | 25 |
 | .rs | 20 |
 | .py | 18 |
 | .gitignore | 13 |
 | .toml | 9 |
 | .sh | 9 |
+| .pdf | 7 |
 | .lock | 7 |
-| .pdf | 6 |
 | .json | 6 |
+| .flac | 5 |
+| .md | 4 |
 | .h | 4 |
-| .md | 3 |
 | .zip | 2 |
 | .plist | 2 |
 | .pbxproj | 2 |
@@ -68,6 +69,7 @@
 | .entitlements | 1 |
 | .desktop-app/artifact | 1 |
 | .daemon/artifact | 1 |
+| .alt-cli/files/books/CS_201 | 1 |
 | .actix-web/artifact | 1 |
 | .LICENSE | 1 |
 
