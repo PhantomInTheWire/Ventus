@@ -9,3 +9,4 @@ files/womp_womp/*
 files/tello.txt
 sample2.pdf
 daemon*
+sync_daemon.log
