@@ -18,3 +18,7 @@ name = "ftp_client"
 [[bin]]
 name = "uniffi-bindgen"
 path = "uniffi-bindgen.rs"
+
+description = "My personal crossplatform ftp file sync client side lib, meant only for use with my own ftp implementation which isnt public yet"
+license = "MIT"
+
