@@ -1,5 +1,5 @@
 [package]
-name = "ftp_client"
+name = "ventus_ftp_client"
 version = "0.1.0"
 edition = "2021"
 description = "My personal crossplatform ftp file sync client side lib, meant only for use with my own ftp implementation which isnt public yet"
