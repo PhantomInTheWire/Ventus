@@ -2,6 +2,9 @@
 name = "ftp_client"
 version = "0.1.0"
 edition = "2021"
+description = "My personal crossplatform ftp file sync client side lib, meant only for use with my own ftp implementation which isnt public yet"
+license = "MIT"
+
 
 [dependencies]
 colored = "2.1.0"
@@ -18,7 +21,4 @@ name = "ftp_client"
 [[bin]]
 name = "uniffi-bindgen"
 path = "uniffi-bindgen.rs"
-
-description = "My personal crossplatform ftp file sync client side lib, meant only for use with my own ftp implementation which isnt public yet"
-license = "MIT"
 
