@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SyncView: View {
+    let ipAddress: String
     @StateObject private var viewModel = SyncViewModel()
     @State private var navigateToDoneView = false
     @State private var showError = false
@@ -37,24 +38,24 @@ struct SyncView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear {
                     viewModel.startAnimations()
-//                    checkAndRequestPermissions { granted, selectedPath in
-//                        if granted {
-//                            do {
-//                                let x = try appleSync(
-//                                    host: "192.168.143.26",
-//                                    port: 1234,
-//                                    localDir: "files/",  // Using relative path
-//                                    remoteDir: "files/"
-//                                )
-//                            } catch {
-//                                errorMessage = error.localizedDescription
-//                                showError = true
-//                            }
-//                        } else {
-//                            errorMessage = "Required permissions not granted"
-//                            showError = true
-//                        }
-//                    }
+                    checkAndRequestPermissions { granted, selectedPath in
+                        if granted {
+                            do {
+                                let x = try appleSync(
+                                    host: ipAddress,
+                                    port: 1234,
+                                    localDir: "files/",  // Using relative path
+                                    remoteDir: "files/"
+                                )
+                            } catch {
+                                errorMessage = error.localizedDescription
+                                showError = true
+                            }
+                        } else {
+                            errorMessage = "Required permissions not granted"
+                            showError = true
+                        }
+                    }
                 }
                 .alert("Error", isPresented: $showError) {
                     Button("OK", role: .cancel) { }

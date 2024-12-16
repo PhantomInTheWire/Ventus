@@ -52,7 +52,7 @@ struct HomeView: View {
                         .offset(y: isShowingInputs ? 0 : 20)
                         
                         NavigationLink(
-                            destination: SyncView(),
+                            destination: SyncView(ipAddress: viewModel.credentials.ipAddress),
                             isActive: $navigateToSyncView
                         ) {
                             ConnectButton(
