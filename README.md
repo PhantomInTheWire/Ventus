@@ -1,3 +1,3 @@
 # Ventus
 
-Asynchronous omnichannel FTP based file synchronization system
+Cross Platform FTP based file synchronization system
